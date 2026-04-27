@@ -2,10 +2,10 @@
   "schema_version": 3,
   "run_id": "20260427T104955Z",
   "created_at": "2026-04-27T10:49:55Z",
-  "updated_at": "2026-04-27T16:30:00Z",
+  "updated_at": "2026-04-27T16:35:00Z",
   "product_slug": "component-usage-atlas",
   "product_root": "products/component-usage-atlas",
-  "status": "qa_ready",
+  "status": "implementing",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -39,7 +39,7 @@
     "task_breakdown": "products/component-usage-atlas/project-planning/plans/task-breakdown-20260427T104955Z.md",
     "task_breakdown_pre_qa": "products/component-usage-atlas/project-planning/plans/task-breakdown-pre-qa-20260427T104955Z.md",
     "qa_report": null,
-    "implementation_runbook": null,
+    "implementation_runbook": "products/component-usage-atlas/project-planning/plans/implementation-runbook-20260427T104955Z.md",
     "content_model": null,
     "content_examples": null,
     "ship_report": null,
@@ -106,8 +106,9 @@
     "target_directory": "site",
     "branch_name": "prd-000",
     "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.Component-Usage-Atlas.git",
-    "status": "not_started",
-    "resumed_from_stage": null
+    "status": "in_progress",
+    "resumed_from_stage": null,
+    "current_milestone": "M1"
   },
   "notes": [
     "Source: storage/marketplace-app-ideas.md row #3 — Component Usage Atlas (L effort).",
