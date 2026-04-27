@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Usage Atlas — POC v2 "Console Operator"</title>
+
+  <!--
+    Blok theme stylesheet.
+    Preferred per .agent/skills/sitecore/blok/theming.md: pull tokens from registry.
+    Tried: https://blok.sitecore.com/r/theme.css (canonical registry URL form).
+    Self-contained file:// clickdummy cannot rely on network. Fallback: raw token
+    block in styles.css (Nova preset values, snapshot date 2026-04-27).
+    See styles.css :root for token source attribution.
+  -->
+  <link rel="stylesheet" href="https://blok.sitecore.com/r/theme.css" media="all" onerror="this.media='not all'" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="app-chrome">
+
+    <!-- ============================================================ -->
+    <!-- Top bar (POC chrome — labels what we are looking at)         -->
+    <!-- ============================================================ -->
+    <header class="theme-bar" role="banner">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        Component Usage Atlas
+        <span>· POC v2 — Console Operator</span>
+      </div>
+      <div class="controls">
+        <button id="theme-toggle" class="btn" data-variant="outline" data-size="sm" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+          <span aria-hidden="true">◐</span>
+          <span id="theme-toggle-label">Dark</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- Stage holds all 6 screens; only one is data-active=true       -->
+    <!-- ============================================================ -->
+    <main class="surface-stage" id="stage">
+
+      <!-- =====================================================
+           SCREEN 1 — Widget · Scan running
+           CI-style segmented progress strip + numeric readout
+           ===================================================== -->
+      <section class="screen" id="screen-1" data-screen="1">
+        <div class="surface-frame" data-surface="widget">
+          <div class="surface-frame__chrome">
+            <span>Widget · xmc:dashboardblocks · scan running</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <!-- Zone 1 — CI-style status bar (running) -->
+          <div class="scan-status" role="status" aria-live="polite" aria-atomic="true">
+            <div class="scan-status__heading">
+              <span class="scan-status__pulse-dot" aria-hidden="true"></span>
+              <span id="lv-phase">Mapping pages…</span>
+            </div>
+            <div class="scan-status__row">
+              <div class="scan-status__bar" aria-hidden="true">
+                <span class="scan-status__seg lv-stop" data-phase-index="0" data-state="completed"></span>
+                <span class="scan-status__seg lv-stop" data-phase-index="1" data-state="active"></span>
+                <span class="scan-status__seg lv-stop" data-phase-index="2" data-state="pending"></span>
+              </div>
+              <span class="scan-status__readout" id="lv-counter">412 / 1247 pages</span>
+              <span class="scan-status__readout text-muted">·</span>
+              <span class="scan-status__readout" id="lv-elapsed">00:23</span>
+              <span class="scan-status__readout text-muted">elapsed · ETA 00:41</span>
+              <button id="lv-cancel" class="btn" data-variant="ghost" data-size="sm" type="button" aria-label="Cancel scan">
+                <span aria-hidden="true">×</span>
+                <span>Cancel</span>
+              </button>
+            </div>
+            <div class="scan-status__seg-labels" aria-hidden="true">
+              <span data-state="completed">SITES 38/38</span>
+              <span data-state="active">PAGES 412/1247</span>
+              <span data-state="pending">COMPONENTS —</span>
+            </div>
+          </div>
+
+          <!-- Zone 2 — disclosure -->
+          <div class="disclosure">
+            <div class="disclosure__left">
+              <span class="badge" data-tone="info">i Direct bindings only</span>
+              <span>Indexing partial results as scan progresses</span>
+            </div>
+            <span class="text-mono text-muted">acme-tenant · whole-tenant scope</span>
+          </div>
+
+          <!-- Zone 3 — partial-results table (populated as scan progresses) -->
+          <div class="widget-data">
+            <div class="widget-toolbar">
+              <span class="input" data-disabled="true" aria-disabled="true">
+                <span aria-hidden="true">⌕</span>
+                <input type="text" placeholder="Search will activate when scan completes…" disabled />
+              </span>
+              <div class="row">
+                <span class="text-muted text-mono">density</span>
+                <div class="toggle-group" role="radiogroup" aria-label="Table density">
+                  <button class="toggle-group__btn" role="radio" aria-checked="true" type="button">Compact</button>
+                  <button class="toggle-group__btn" role="radio" aria-checked="false" type="button">Comfortable</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="scroll-area" style="max-height: 320px;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Rendering</th>
+                    <th class="num" data-sort="desc">Total</th>
+                    <th class="num">Pages</th>
+                    <th>Coverage</th>
+                    <th class="num">Datasources</th>
+                    <th class="num">Last seen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><div class="rendering-cell"><span class="rendering-cell__name">Hero Banner</span></div></td><td class="num">124</td><td class="num">118</td><td><span class="mini-bar"><span style="width: 95%"></span></span></td><td class="num">7</td><td class="num text-muted">14:31</td></tr>
+                  <tr><td><div class="rendering-cell"><span class="rendering-cell__name">Promo Tile</span></div></td><td class="num">87</td><td class="num">72</td><td><span class="mini-bar"><span style="width: 58%"></span></span></td><td class="num">14</td><td class="num text-muted">14:30</td></tr>
+                  <tr><td><div class="rendering-cell"><span class="rendering-cell__name">Navigation Primary</span></div></td><td class="num">63</td><td class="num">63</td><td><span class="mini-bar"><span style="width: 51%"></span></span></td><td class="num">2</td><td class="num text-muted">14:29</td></tr>
+                  <tr><td>
+                    <span class="skeleton" style="width: 140px; height: 14px;"></span>
+                  </td><td class="num"><span class="skeleton" style="width: 28px; height: 12px;"></span></td><td class="num"><span class="skeleton" style="width: 24px; height: 12px;"></span></td><td><span class="skeleton" style="width: 120px; height: 6px;"></span></td><td class="num"><span class="skeleton" style="width: 20px; height: 12px;"></span></td><td class="num"><span class="skeleton" style="width: 32px; height: 12px;"></span></td></tr>
+                  <tr><td>
+                    <span class="skeleton" style="width: 110px; height: 14px;"></span>
+                  </td><td class="num"><span class="skeleton" style="width: 24px; height: 12px;"></span></td><td class="num"><span class="skeleton" style="width: 22px; height: 12px;"></span></td><td><span class="skeleton" style="width: 120px; height: 6px;"></span></td><td class="num"><span class="skeleton" style="width: 18px; height: 12px;"></span></td><td class="num"><span class="skeleton" style="width: 32px; height: 12px;"></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Zone 4 — KPI rail (idle / loading) -->
+          <div class="kpi-rail">
+            <div class="kpi-cell"><span class="kpi-cell__label">Total renderings</span><span class="kpi-cell__value text-muted">—</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Total datasources</span><span class="kpi-cell__value text-muted">—</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Pages scanned</span><span class="kpi-cell__value text-mono" id="lv-kpi-pages">412</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Skipped</span><span class="kpi-cell__value text-muted">—</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           SCREEN 2 — Widget · Scan complete (dense table)
+           ===================================================== -->
+      <section class="screen" id="screen-2" data-screen="2">
+        <div class="surface-frame" data-surface="widget">
+          <div class="surface-frame__chrome">
+            <span>Widget · xmc:dashboardblocks · scan complete</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <!-- Zone 1 — collapsed status as build summary -->
+          <div class="freshness">
+            <div class="freshness__left">
+              <span class="freshness__icon" aria-hidden="true">✓</span>
+              <span>
+                <strong class="text-mono">1247 pages</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-mono">38 sites</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-mono">312 unique renderings</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-mono">89% page coverage</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-warning text-mono">3 skipped</strong>
+              </span>
+              <span class="freshness__detail">Last scanned 14:32 · 01:04 elapsed</span>
+            </div>
+            <div class="freshness__right">
+              <span class="select" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                <span>All collections</span>
+                <span aria-hidden="true">▾</span>
+              </span>
+              <button class="btn" data-variant="default" data-size="sm" type="button">
+                <span aria-hidden="true">↻</span>
+                <span>Refresh atlas</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Zone 2 — disclosure with skipped link -->
+          <div class="disclosure">
+            <div class="disclosure__left">
+              <span class="badge" data-tone="info">i Direct bindings only</span>
+              <span class="text-muted">·</span>
+              <button class="disclosure__skipped skipped-link" type="button" aria-label="View 3 skipped pages">⚠ 3 pages skipped — view</button>
+            </div>
+            <span class="text-mono text-muted">acme-tenant · whole-tenant scope</span>
+          </div>
+
+          <!-- Zone 3 — dense data table -->
+          <div class="widget-data">
+            <div class="widget-toolbar">
+              <span class="input">
+                <span aria-hidden="true">⌕</span>
+                <input type="text" placeholder="Search 312 renderings by name or id…" aria-label="Search renderings" />
+              </span>
+              <div class="row">
+                <span class="text-muted text-mono">density</span>
+                <div class="toggle-group" role="radiogroup" aria-label="Table density">
+                  <button class="toggle-group__btn" role="radio" aria-checked="true" type="button">Compact</button>
+                  <button class="toggle-group__btn" role="radio" aria-checked="false" type="button">Comfortable</button>
+                </div>
+                <span class="separator" data-orientation="vertical" aria-hidden="true"></span>
+                <span class="text-muted text-mono">312 rows</span>
+              </div>
+            </div>
+
+            <div class="scroll-area" style="max-height: 380px;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Rendering</th>
+                    <th class="num" data-sort="desc">Total</th>
+                    <th class="num">Pages</th>
+                    <th>Coverage</th>
+                    <th class="num">Datasources</th>
+                    <th class="num">Sites</th>
+                    <th class="num">Last seen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Hero Banner</span></div></td><td class="num">124</td><td class="num">118</td><td><span class="mini-bar"><span style="width: 95%"></span></span></td><td class="num">7</td><td class="num">12</td><td class="num text-muted">14:32</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Promo Tile</span></div></td><td class="num">87</td><td class="num">72</td><td><span class="mini-bar"><span style="width: 58%"></span></span></td><td class="num">14</td><td class="num">9</td><td class="num text-muted">14:32</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Navigation Primary</span></div></td><td class="num">63</td><td class="num">63</td><td><span class="mini-bar"><span style="width: 51%"></span></span></td><td class="num">2</td><td class="num">38</td><td class="num text-muted">14:32</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Card Grid</span><span class="rendering-cell__suffix text-muted">· 73fa12b</span></div></td><td class="num">36</td><td class="num">34</td><td><span class="mini-bar"><span style="width: 27%"></span></span></td><td class="num">1</td><td class="num">6</td><td class="num text-muted">14:31</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Card Grid</span><span class="rendering-cell__suffix text-muted">· a04ee31</span></div></td><td class="num">18</td><td class="num">18</td><td><span class="mini-bar"><span style="width: 14%"></span></span></td><td class="num">0</td><td class="num">3</td><td class="num text-muted">14:30</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Article Header</span></div></td><td class="num">14</td><td class="num">14</td><td><span class="mini-bar"><span style="width: 11%"></span></span></td><td class="num">3</td><td class="num">2</td><td class="num text-muted">14:30</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Footer Primary</span></div></td><td class="num">12</td><td class="num">12</td><td><span class="mini-bar"><span style="width: 10%"></span></span></td><td class="num">1</td><td class="num">12</td><td class="num text-muted">14:29</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Pricing Table</span></div></td><td class="num">9</td><td class="num">9</td><td><span class="mini-bar"><span style="width: 7%"></span></span></td><td class="num">2</td><td class="num">4</td><td class="num text-muted">14:29</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell rendering-cell--unknown"><span class="rendering-cell__name">(unknown rendering)</span></div></td><td class="num">9</td><td class="num">7</td><td><span class="mini-bar"><span style="width: 7%"></span></span></td><td class="num text-muted">—</td><td class="num">3</td><td class="num text-muted">14:28</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Newsletter Signup</span></div></td><td class="num">6</td><td class="num">6</td><td><span class="mini-bar"><span style="width: 5%"></span></span></td><td class="num">1</td><td class="num">5</td><td class="num text-muted">14:28</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Zone 4 — KPI rail (populated) -->
+          <div class="kpi-rail">
+            <div class="kpi-cell" data-emphasis="primary"><span class="kpi-cell__label">Total renderings</span><span class="kpi-cell__value text-mono">312</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Total datasources</span><span class="kpi-cell__value text-mono">847</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Pages scanned</span><span class="kpi-cell__value text-mono">1247</span></div>
+            <button class="kpi-cell skipped-link" data-clickable="true" data-tone="warning" type="button" aria-label="3 skipped pages — open report"><span class="kpi-cell__label">Skipped</span><span class="kpi-cell__value text-mono">3</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           SCREEN 3 — Widget · Row drawer
+           ===================================================== -->
+      <section class="screen" id="screen-3" data-screen="3">
+        <div class="surface-frame" data-surface="widget" data-drawer-open="true">
+          <div class="surface-frame__chrome">
+            <span>Widget · row inspector · drawer open</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <div class="freshness">
+            <div class="freshness__left">
+              <span class="freshness__icon" aria-hidden="true">✓</span>
+              <span>
+                <strong class="text-mono">1247 pages</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-mono">312 renderings</strong>
+                <span class="text-muted">·</span>
+                <strong class="text-mono">89% coverage</strong>
+              </span>
+              <span class="freshness__detail">Last scanned 14:32</span>
+            </div>
+            <div class="freshness__right">
+              <button class="btn" data-variant="outline" data-size="sm" type="button">↻ Refresh atlas</button>
+            </div>
+          </div>
+
+          <div class="disclosure">
+            <div class="disclosure__left">
+              <span class="badge" data-tone="info">i Direct bindings only</span>
+            </div>
+            <span class="text-mono text-muted">row 1 of 312 selected</span>
+          </div>
+
+          <div class="widget-data">
+            <div class="widget-toolbar">
+              <span class="input">
+                <span aria-hidden="true">⌕</span>
+                <input type="text" value="Hero Banner" aria-label="Search renderings" />
+              </span>
+              <div class="row">
+                <span class="text-muted text-mono">density · compact</span>
+              </div>
+            </div>
+
+            <div class="scroll-area" style="max-height: 360px;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Rendering</th>
+                    <th class="num" data-sort="desc">Total</th>
+                    <th class="num">Pages</th>
+                    <th>Coverage</th>
+                    <th class="num">Datasources</th>
+                    <th class="num">Sites</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr aria-current="true" tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Hero Banner</span></div></td><td class="num">124</td><td class="num">118</td><td><span class="mini-bar"><span style="width: 95%"></span></span></td><td class="num">7</td><td class="num">12</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Promo Tile</span></div></td><td class="num">87</td><td class="num">72</td><td><span class="mini-bar"><span style="width: 58%"></span></span></td><td class="num">14</td><td class="num">9</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Navigation Primary</span></div></td><td class="num">63</td><td class="num">63</td><td><span class="mini-bar"><span style="width: 51%"></span></span></td><td class="num">2</td><td class="num">38</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Card Grid</span><span class="rendering-cell__suffix text-muted">· 73fa12b</span></div></td><td class="num">36</td><td class="num">34</td><td><span class="mini-bar"><span style="width: 27%"></span></span></td><td class="num">1</td><td class="num">6</td></tr>
+                  <tr tabindex="0"><td><div class="rendering-cell"><span class="rendering-cell__name">Article Header</span></div></td><td class="num">14</td><td class="num">14</td><td><span class="mini-bar"><span style="width: 11%"></span></span></td><td class="num">3</td><td class="num">2</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="kpi-rail">
+            <div class="kpi-cell" data-emphasis="primary"><span class="kpi-cell__label">Total renderings</span><span class="kpi-cell__value text-mono">312</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Total datasources</span><span class="kpi-cell__value text-mono">847</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Pages scanned</span><span class="kpi-cell__value text-mono">1247</span></div>
+            <div class="kpi-cell" data-tone="warning"><span class="kpi-cell__label">Skipped</span><span class="kpi-cell__value text-mono">3</span></div>
+          </div>
+
+          <!-- Drawer overlay + sheet -->
+          <div class="sheet-overlay" data-close-drawer aria-hidden="true"></div>
+          <aside class="sheet" role="dialog" aria-modal="false" aria-labelledby="drawer-3-title">
+            <header class="sheet__header">
+              <div>
+                <h2 id="drawer-3-title" class="sheet__title">
+                  Hero Banner
+                  <span class="badge" data-tone="primary">124 uses</span>
+                </h2>
+                <p class="sheet__subtitle text-mono">renderingId: 9b0c1e3·a04ee31 · 7 datasources bound · 12 sites</p>
+              </div>
+              <button class="btn" data-variant="ghost" data-size="icon" type="button" data-close-drawer aria-label="Close drawer">×</button>
+            </header>
+            <div class="sheet__body">
+              <p class="sheet__section-title">Direct rendering usage · 118 pages</p>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Home</div>
+                  <div class="page-row__meta text-mono">acme-marketing · /home</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">About Acme</div>
+                  <div class="page-row__meta text-mono">acme-marketing · /about</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Investor Relations</div>
+                  <div class="page-row__meta text-mono">acme-ir · /investors</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Q3 Earnings</div>
+                  <div class="page-row__meta text-mono">acme-ir · /investors/q3-earnings</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+
+              <p class="sheet__section-title">Via datasource · 6 pages</p>
+              <div class="ds-card">
+                <div class="ds-card__main">
+                  <div class="ds-card__primary">HeroData-Main</div>
+                  <div class="ds-card__secondary text-mono">/sitecore/content/Acme/Data/Hero/Main</div>
+                </div>
+                <span class="ds-card__counter">+4</span>
+              </div>
+              <div class="ds-card">
+                <div class="ds-card__main">
+                  <div class="ds-card__primary">HeroData-Promo-Q3</div>
+                  <div class="ds-card__secondary text-mono">/sitecore/content/Acme/Data/Hero/Promo-Q3</div>
+                </div>
+                <span class="ds-card__counter">+2</span>
+              </div>
+            </div>
+            <div class="sheet__footer">
+              <span class="text-mono">esc closes · arrow keys navigate rows</span>
+              <span class="row">
+                <span class="kbd">Esc</span>
+                <button class="btn" data-variant="ghost" data-size="sm" type="button" data-close-drawer>Close</button>
+              </span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           SCREEN 4 — Panel · Page context
+           ===================================================== -->
+      <section class="screen" id="screen-4" data-screen="4">
+        <div class="surface-frame" data-surface="panel">
+          <div class="surface-frame__chrome">
+            <span>Panel · xmc:pages:context-panel</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <!-- Zone 1 — build-artifact summary (panel-narrow) -->
+          <div class="scan-status" style="padding-bottom: 10px;">
+            <div class="scan-status__heading">
+              <span aria-hidden="true">▣</span>
+              <span class="text-mono">Q3 Earnings · acme-ir</span>
+            </div>
+            <div class="scan-status__row">
+              <span class="scan-status__readout"><strong>5 renderings</strong></span>
+              <span class="scan-status__readout text-muted">·</span>
+              <span class="scan-status__readout"><strong>3 datasources</strong></span>
+              <span class="scan-status__readout text-muted">·</span>
+              <span class="scan-status__readout text-muted">last scan 14:32</span>
+            </div>
+          </div>
+
+          <!-- Zone 2 — narrow disclosure -->
+          <div class="panel-scope">
+            <span class="badge" data-tone="info">i Direct bindings only</span>
+            <span class="text-mono">/investors/q3-earnings</span>
+          </div>
+
+          <!-- Zone 3 — rendering stack with counter rows -->
+          <p class="panel-section-title">Renderings on this page</p>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="12 other pages use Hero Banner">
+            <div class="counter-row__count">
+              <span class="num">12</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Hero Banner</div>
+              <div class="counter-row__secondary text-mono">datasource: HeroData-Main</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="34 other pages use Card Grid">
+            <div class="counter-row__count">
+              <span class="num">34</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Card Grid</div>
+              <div class="counter-row__secondary text-mono">datasource: CardGridData-Q3</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row" aria-disabled="true" aria-label="Only used on this page">
+            <div class="counter-row__count">
+              <span class="num" data-state="zero">0</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Earnings Disclosure</div>
+              <div class="counter-row__secondary text-mono">— no datasource</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">·</span>
+          </div>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="63 other pages use Navigation Primary">
+            <div class="counter-row__count">
+              <span class="num">63</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Navigation Primary</div>
+              <div class="counter-row__secondary text-mono">datasource: NavData-Global</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="12 other pages use Footer Primary">
+            <div class="counter-row__count">
+              <span class="num">12</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Footer Primary</div>
+              <div class="counter-row__secondary text-mono">datasource: FooterData-Global</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <p class="panel-section-title">Datasource impact</p>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="42 cross-tenant pages use HeroData-Main">
+            <div class="counter-row__count">
+              <span class="num">42</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">HeroData-Main</div>
+              <div class="counter-row__secondary text-mono">cross-tenant · /sitecore/content/Acme/Data/Hero/Main</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="PromoBlock-Q3 datasource missing, referenced by 7 pages">
+            <div class="counter-row__count">
+              <span class="num" data-state="missing">⚠</span>
+              <span class="label" data-state="missing">missing</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">PromoBlock-Q3</div>
+              <div class="counter-row__secondary text-warning">referenced by 7 pages · datasource not resolvable</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row" tabindex="0" data-jump-counter aria-label="11 cross-tenant pages use FooterData-Global">
+            <div class="counter-row__count">
+              <span class="num">11</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">FooterData-Global</div>
+              <div class="counter-row__secondary text-mono">cross-tenant · /sitecore/content/Global/Footer</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           SCREEN 5 — Panel · Counter drawer
+           ===================================================== -->
+      <section class="screen" id="screen-5" data-screen="5">
+        <div class="surface-frame" data-surface="panel" data-drawer-open="true">
+          <div class="surface-frame__chrome">
+            <span>Panel · counter drawer · cross-tenant</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <div class="scan-status" style="padding-bottom: 10px;">
+            <div class="scan-status__heading">
+              <span aria-hidden="true">▣</span>
+              <span class="text-mono">Q3 Earnings · acme-ir</span>
+            </div>
+            <div class="scan-status__row">
+              <span class="scan-status__readout text-muted">drawer open · HeroData-Main</span>
+            </div>
+          </div>
+
+          <div class="panel-scope">
+            <span class="badge" data-tone="primary">datasource drawer</span>
+            <span class="text-mono">42 cross-tenant pages</span>
+          </div>
+
+          <p class="panel-section-title">Renderings on this page</p>
+
+          <div class="counter-row">
+            <div class="counter-row__count">
+              <span class="num">12</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Hero Banner</div>
+              <div class="counter-row__secondary text-mono">datasource: HeroData-Main</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <div class="counter-row">
+            <div class="counter-row__count">
+              <span class="num">34</span>
+              <span class="label">pages</span>
+            </div>
+            <div class="counter-row__main">
+              <div class="counter-row__primary">Card Grid</div>
+              <div class="counter-row__secondary text-mono">datasource: CardGridData-Q3</div>
+            </div>
+            <span class="counter-row__chev" aria-hidden="true">→</span>
+          </div>
+
+          <!-- Drawer overlay + sheet (panel slides from left) -->
+          <div class="sheet-overlay" data-close-drawer aria-hidden="true"></div>
+          <aside class="sheet" data-side="left" role="dialog" aria-modal="false" aria-labelledby="drawer-5-title">
+            <header class="sheet__header">
+              <div>
+                <h2 id="drawer-5-title" class="sheet__title">
+                  HeroData-Main
+                  <span class="badge" data-tone="primary">42 pages</span>
+                </h2>
+                <p class="sheet__subtitle text-mono">/sitecore/content/Acme/Data/Hero/Main · 7 renderings</p>
+              </div>
+              <button class="btn" data-variant="ghost" data-size="icon" type="button" data-close-drawer aria-label="Close drawer">×</button>
+            </header>
+            <div class="sheet__body">
+              <p class="sheet__section-title">Cross-tenant pages bound · 42</p>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Home</div>
+                  <div class="page-row__meta text-mono">acme-marketing · /home</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Investor Home</div>
+                  <div class="page-row__meta text-mono">acme-ir · /investors</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Sustainability Report</div>
+                  <div class="page-row__meta text-mono">acme-marketing · /sustainability</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+              <div class="page-row">
+                <span class="page-row__icon" aria-hidden="true">▤</span>
+                <div class="page-row__main">
+                  <div class="page-row__name">Press Releases</div>
+                  <div class="page-row__meta text-mono">acme-marketing · /press</div>
+                </div>
+                <span class="page-row__chev" aria-hidden="true">→</span>
+              </div>
+
+              <p class="sheet__section-title">Renderings binding this datasource · 7</p>
+              <div class="ds-card">
+                <div class="ds-card__main">
+                  <div class="ds-card__primary">Hero Banner</div>
+                  <div class="ds-card__secondary text-mono">12 pages</div>
+                </div>
+                <span class="ds-card__counter">+5</span>
+              </div>
+              <div class="ds-card">
+                <div class="ds-card__main">
+                  <div class="ds-card__primary">Article Header</div>
+                  <div class="ds-card__secondary text-mono">8 pages</div>
+                </div>
+                <span class="ds-card__counter">+3</span>
+              </div>
+            </div>
+            <div class="sheet__footer">
+              <span class="text-mono">esc closes</span>
+              <span class="row">
+                <span class="kbd">Esc</span>
+                <button class="btn" data-variant="ghost" data-size="sm" type="button" data-close-drawer>Close</button>
+              </span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           SCREEN 6 — Skipped pages report (render-as-log)
+           ===================================================== -->
+      <section class="screen" id="screen-6" data-screen="6">
+        <div class="surface-frame" data-surface="widget" data-skipped-open="true">
+          <div class="surface-frame__chrome">
+            <span>Widget · skipped pages report</span>
+            <span class="dots"><span></span><span></span><span></span></span>
+          </div>
+
+          <div class="freshness">
+            <div class="freshness__left">
+              <span class="freshness__icon" aria-hidden="true" style="background: var(--warning-background); color: var(--warning-foreground);">⚠</span>
+              <span>
+                <strong class="text-mono">3 pages skipped</strong>
+                <span class="text-muted">·</span>
+                <span class="text-mono">last scan 14:32</span>
+              </span>
+              <span class="freshness__detail">Run-id: scan-20260427T143200Z · 1244 / 1247 indexed</span>
+            </div>
+            <div class="freshness__right">
+              <button class="btn" data-variant="outline" data-size="sm" type="button">Export log</button>
+              <button class="btn" data-variant="default" data-size="sm" type="button">↻ Re-scan</button>
+            </div>
+          </div>
+
+          <div class="disclosure">
+            <div class="disclosure__left">
+              <span class="badge" data-tone="warning">3 records</span>
+              <span class="text-muted">filter:</span>
+              <span class="badge" data-tone="destructive">forbidden · 1</span>
+              <span class="badge" data-tone="warning">unresolved · 1</span>
+              <span class="badge" data-tone="info">timeout · 1</span>
+            </div>
+            <span class="text-mono text-muted">log scrollable</span>
+          </div>
+
+          <div class="widget-data">
+            <div class="scroll-area" style="max-height: 480px;">
+              <div class="skipped-row">
+                <div class="skipped-row__head">
+                  <span class="skipped-row__name">Investor Relations · Restricted Briefing</span>
+                  <span class="badge" data-tone="destructive">forbidden</span>
+                </div>
+                <div class="skipped-row__path text-mono">acme-ir · /investors/restricted/briefing-q3 · pageId: 1f2a·b8c4e09</div>
+                <div class="text-mono text-muted">14:32:14.882 — pages.getComponentsOnPage returned 403 · permission denied for current scope</div>
+              </div>
+
+              <div class="skipped-row">
+                <div class="skipped-row__head">
+                  <span class="skipped-row__name">Acme Marketing · Legacy Promo Archive</span>
+                  <span class="badge" data-tone="warning">unresolved</span>
+                </div>
+                <div class="skipped-row__path text-mono">acme-marketing · /archive/legacy-promos-2018 · pageId: 7ab3·d042e91</div>
+                <div class="text-mono text-muted">14:32:18.214 — rendering definition could not be resolved · 4 unknown rendering ids skipped</div>
+              </div>
+
+              <div class="skipped-row">
+                <div class="skipped-row__head">
+                  <span class="skipped-row__name">Acme Marketing · Newsroom Megamenu Test</span>
+                  <span class="badge" data-tone="info">timeout</span>
+                </div>
+                <div class="skipped-row__path text-mono">acme-marketing · /newsroom/test-megamenu · pageId: c9e1·44ff019</div>
+                <div class="text-mono text-muted">14:32:21.604 — pages.getComponentsOnPage exceeded 8s budget · retried 2/2 · giving up</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-rail">
+            <div class="kpi-cell"><span class="kpi-cell__label">Forbidden</span><span class="kpi-cell__value text-mono">1</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Unresolved</span><span class="kpi-cell__value text-mono">1</span></div>
+            <div class="kpi-cell"><span class="kpi-cell__label">Timeout</span><span class="kpi-cell__value text-mono">1</span></div>
+            <button class="kpi-cell" data-clickable="true" type="button" data-close-drawer aria-label="Back to scan complete">
+              <span class="kpi-cell__label">Back</span>
+              <span class="kpi-cell__value text-mono" style="font-size: var(--text-lg);">← screen 2</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- Floating screen navigator — clickdummy nav, not part of UX     -->
+    <!-- ============================================================ -->
+    <nav class="screen-nav" aria-label="Clickdummy screen navigator">
+      <div class="screen-nav__title">
+        <span>Screens · v2 console</span>
+        <span class="kbd">esc</span>
+      </div>
+      <div class="screen-nav__list">
+        <button class="screen-nav__item" type="button" data-target="screen-1"><span class="num">1</span><span>Widget · scan running</span></button>
+        <button class="screen-nav__item" type="button" data-target="screen-2"><span class="num">2</span><span>Widget · scan complete</span></button>
+        <button class="screen-nav__item" type="button" data-target="screen-3"><span class="num">3</span><span>Widget · row drawer</span></button>
+        <button class="screen-nav__item" type="button" data-target="screen-4"><span class="num">4</span><span>Panel · page context</span></button>
+        <button class="screen-nav__item" type="button" data-target="screen-5"><span class="num">5</span><span>Panel · counter drawer</span></button>
+        <button class="screen-nav__item" type="button" data-target="screen-6"><span class="num">6</span><span>Skipped pages report</span></button>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

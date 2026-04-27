@@ -5,7 +5,7 @@
   "updated_at": "2026-04-27T10:49:55Z",
   "product_slug": "component-usage-atlas",
   "product_root": "products/component-usage-atlas",
-  "status": "spec_ready",
+  "status": "architecture_ready",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "standard",
@@ -29,7 +29,7 @@
     "brain_dump": null,
     "prd": "products/component-usage-atlas/project-planning/PRD/prd-000.md",
     "prd_minimal": "products/component-usage-atlas/project-planning/PRD/prd-minimal-000.md",
-    "architecture": null,
+    "architecture": "products/component-usage-atlas/project-planning/architecture/architecture-20260427T104955Z.md",
     "task_breakdown": null,
     "task_breakdown_pre_qa": null,
     "qa_report": null,
@@ -60,6 +60,14 @@
       "exited_at": "2026-04-27T10:55:00Z",
       "outcome": "completed",
       "error": null
+    },
+    {
+      "stage": "architecture_ready",
+      "agent": "04-software-architect",
+      "entered_at": "2026-04-27T11:00:00Z",
+      "exited_at": "2026-04-27T11:30:00Z",
+      "outcome": "completed",
+      "error": null
     }
   ],
   "implementation": {
@@ -74,12 +82,10 @@
     "Source: storage/marketplace-app-ideas.md row #3 — Component Usage Atlas (L effort).",
     "discovery: completed (Round 1+2 in /create-prd; full discovery, no brain-dump).",
     "critical_review: completed (Round 1 only; user folded all call-outs into PRD revision rather than running further rounds).",
-    "ADRs introduced this run: ADR-0002 (Mode A only), ADR-0003 (no persistence), ADR-0004 (two-surface single-app), ADR-0005 (identity model), ADR-0006 (direct datasource bindings only).",
-    "Loading mini-game explicitly out of v1 (OS-12); polished branded loading visuals only in v1.",
-    "Persona claims A-PERS-1..A-PERS-4 are labeled assumptions; validation deferred to post-launch S1/S6 pulses.",
-    "Pain magnitude claims A-PAIN-1..A-PAIN-5 are labeled assumptions; validation deferred to post-launch.",
-    "Datasource scope explicitly limited to direct bindings (ADR-0006); editor-visible 'Direct bindings only' affordance mandatory.",
-    "Multi-tab and cross-tab cache sync explicitly out of v1 (IS-14, OS-14).",
-    "Stack decision (Vite+React vs marketplace-app starter) deferred to /architect — will live in ADR-0007."
+    "ADRs introduced by /create-prd: ADR-0002..0006.",
+    "ADRs introduced by /architect: ADR-0007 (scaffold), ADR-0008 (Next.js stay), ADR-0009 (Blok UI), ADR-0010 (singleton state), ADR-0011 (branded loading), ADR-0012 (concurrency 8 + backoff), ADR-0013 (in-iframe telemetry), ADR-0014 (root notFound).",
+    "Architecture file: products/component-usage-atlas/project-planning/architecture/architecture-20260427T104955Z.md (917 lines).",
+    "Architect-time open questions OQ-A1..OQ-A4 added: pagesGetComponentsOnPage field-name verification, sitesGetAllPagesBySite pagination, nested-rendering depth — Lead Developer must confirm at scaffold time.",
+    "Recommended next stage: UI design (mandatory ask), then /task-breakdown."
   ]
 }
