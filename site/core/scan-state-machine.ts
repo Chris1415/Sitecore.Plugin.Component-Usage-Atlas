@@ -18,7 +18,18 @@ import type { AtlasState } from '@/lib/sdk/types';
 
 export type AtlasStateKind = AtlasState['kind'];
 
-const SCANNING: ReadonlySet<AtlasStateKind> = new Set(['completed', 'canceled', 'error']);
+// scanning → scanning is allowed because the engine emits a fresh
+// `scanning` state on every phase transition (sites → pages →
+// components) carrying updated `progress`. The same-kind self-edge
+// is therefore part of the contract — see § 4 T027 step 3 ("phase
+// transition") and the test's exhaustive table assertion (T102) which
+// exempts `scanning → scanning` from the disallowed-set.
+const SCANNING: ReadonlySet<AtlasStateKind> = new Set([
+  'scanning',
+  'completed',
+  'canceled',
+  'error',
+]);
 const FROM_TERMINAL: ReadonlySet<AtlasStateKind> = new Set(['scanning']);
 
 export const ALLOWED_TRANSITIONS: ReadonlyMap<
