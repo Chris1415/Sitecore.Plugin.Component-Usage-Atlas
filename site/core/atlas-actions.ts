@@ -22,21 +22,27 @@
 // most one scan in flight at a time (enforced by the strict-mode guard
 // inside `runScan`).
 
-import { runScan, type ScanHandle } from '@/core/scan-engine';
+import { runScan, type ScanHandle, type ScanSurface } from '@/core/scan-engine';
 import { getAtlasSnapshot } from '@/core/atlas-store';
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 import type { AtlasScope } from '@/lib/sdk/types';
 
 let currentHandle: ScanHandle | undefined;
 let currentScope: AtlasScope = { kind: 'all-collections' };
+// M5 fix from code-review-20260428T110500Z — remember which surface
+// kicked off the most recent scan so refresh / scope-change calls
+// preserve the originating surface tag in telemetry.
+let currentSurface: ScanSurface = 'widget';
 
 const startUnderlying = (
   client: ClientSDK,
   contextId: string,
   scope: AtlasScope,
+  surface: ScanSurface,
 ): ScanHandle => {
   currentScope = scope;
-  const handle = runScan({ client, contextId, scope });
+  currentSurface = surface;
+  const handle = runScan({ client, contextId, scope, surface });
   currentHandle = handle;
   // Clear the handle slot once done so future `cancelScan()` calls
   // don't try to abort a finished scan. We don't await here — the
@@ -53,17 +59,21 @@ const startUnderlying = (
  * Start a scan with the given scope. If a scan is already in flight
  * (state === 'scanning'), this no-ops — callers should `cancelScan()`
  * first if they want to swap scope mid-flight.
+ *
+ * `surface` defaults to `'widget'` for backwards compatibility (test
+ * fixtures and existing callers); panel callers pass `'panel'`.
  */
 export function triggerScan(
   scope: AtlasScope,
   client: ClientSDK,
   contextId: string,
+  surface: ScanSurface = 'widget',
 ): ScanHandle {
   const state = getAtlasSnapshot();
   if (state.kind === 'scanning' && currentHandle) {
     return currentHandle;
   }
-  return startUnderlying(client, contextId, scope);
+  return startUnderlying(client, contextId, scope, surface);
 }
 
 /** Cancel the active scan if any. No-op when there is none. */
@@ -75,10 +85,18 @@ export function cancelScan(): void {
  * Cancel the current scan (if any) and start a fresh one with the
  * SAME scope — used by the "Refresh atlas" action in the freshness
  * ribbon (T046). The prior atlas remains visible per FR-2.5.
+ *
+ * `surface` defaults to the surface that initiated the most recent
+ * scan so a refresh button click on the panel doesn't get re-tagged as
+ * `'widget'` in telemetry.
  */
-export function refreshAtlas(client: ClientSDK, contextId: string): ScanHandle {
+export function refreshAtlas(
+  client: ClientSDK,
+  contextId: string,
+  surface: ScanSurface = currentSurface,
+): ScanHandle {
   cancelScan();
-  return startUnderlying(client, contextId, currentScope);
+  return startUnderlying(client, contextId, currentScope, surface);
 }
 
 /**
@@ -90,9 +108,10 @@ export function setScope(
   scope: AtlasScope,
   client: ClientSDK,
   contextId: string,
+  surface: ScanSurface = currentSurface,
 ): ScanHandle {
   cancelScan();
-  return startUnderlying(client, contextId, scope);
+  return startUnderlying(client, contextId, scope, surface);
 }
 
 export const __resetActionsForTest = (): void => {
@@ -101,4 +120,5 @@ export const __resetActionsForTest = (): void => {
   }
   currentHandle = undefined;
   currentScope = { kind: 'all-collections' };
+  currentSurface = 'widget';
 };

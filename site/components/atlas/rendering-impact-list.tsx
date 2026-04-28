@@ -21,6 +21,7 @@ import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { RenderingNameCell } from '@/components/atlas/rendering-name-cell';
 import { MissingDatasourceWarning } from '@/components/atlas/missing-datasource-warning';
+import { computeCollisions } from '@/lib/collisions';
 import type {
   Atlas,
   ComponentRecord,
@@ -78,6 +79,16 @@ export function RenderingImpactList({
   const allRenderings = useMemo(
     () => atlas?.renderingIndex ?? new Map<string, RenderingUsage>(),
     [atlas],
+  );
+
+  // M1 fix from code-review-20260428T110500Z: compute the collision map
+  // ONCE per render (keyed on the atlas's rendering index reference) so
+  // each `<RenderingNameCell />` doesn't re-walk the full set. Skipped
+  // for the panel until atlas resolves — without atlas, there's no set
+  // to compute over.
+  const collisionMap = useMemo(
+    () => computeCollisions(Array.from(allRenderings.values())),
+    [allRenderings],
   );
 
   if (components.length === 0) {
@@ -183,6 +194,7 @@ export function RenderingImpactList({
                     renderingId={renderingId}
                     renderingName={c.renderingName ?? '(unnamed rendering)'}
                     allRenderings={allRenderings}
+                    collisionMap={collisionMap}
                   />
                 ) : (
                   <span className="text-muted-foreground italic">

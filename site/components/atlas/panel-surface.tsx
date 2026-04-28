@@ -111,6 +111,17 @@ type PagesContextEvent = {
   readonly pageInfo?: { readonly id?: string; readonly name?: string; readonly path?: string };
 };
 
+// `client.query` overloads in `@sitecore-marketplace-sdk/client/dist/types.d.ts`
+// (`BaseQueryOptions`) accept `subscribe`, `onSuccess`, `onError`, but the
+// generated `QueryMap['pages.context']` does not surface a typed callback
+// signature for `onSuccess`. We model the subscription option shape
+// locally and cross to it through `unknown` once — no `any`.
+type PagesContextSubscribeOptions = {
+  readonly subscribe: true;
+  readonly onSuccess: (data: PagesContextEvent) => void;
+  readonly onError?: (err: unknown) => void;
+};
+
 // --- main component --------------------------------------------------
 
 export function PanelSurface({
@@ -147,7 +158,10 @@ export function PanelSurface({
   // 1. First-mount: kick off the global scan if we're idle.
   useEffect(() => {
     if (state.kind === 'idle') {
-      triggerScan({ kind: 'all-collections' }, client, contextId);
+      // M5 fix from code-review-20260428T110500Z: tag the scan as
+      // panel-initiated so telemetry events emitted by the engine
+      // surface as `surface: 'panel'` not `'widget'`.
+      triggerScan({ kind: 'all-collections' }, client, contextId, 'panel');
     }
     track({
       timestamp_ms: Date.now(),
@@ -164,7 +178,7 @@ export function PanelSurface({
 
     const subscribe = async () => {
       try {
-        const res = (await client.query('pages.context', {
+        const options: PagesContextSubscribeOptions = {
           subscribe: true,
           onSuccess: (data: PagesContextEvent) => {
             if (!active) return;
@@ -183,8 +197,16 @@ export function PanelSurface({
               cause: err instanceof Error ? err.message : String(err),
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any)) as PagesContextSubscribeResult;
+        };
+        // Cross to the SDK signature through `unknown` once — the SDK's
+        // generated `QueryMap['pages.context']` does not advertise the
+        // typed callback shape, but `BaseQueryOptions` (cited above)
+        // does. The cast surface is now a single typed interface, not
+        // `any`.
+        const res = (await client.query(
+          'pages.context',
+          options as unknown as Parameters<typeof client.query>[1],
+        )) as PagesContextSubscribeResult;
         if (!active) {
           res?.unsubscribe?.();
           return;
@@ -336,7 +358,7 @@ export function PanelSurface({
         <PageContextCard
           pageName={activePageName ?? undefined}
           pagePath={activePagePath ?? undefined}
-          onRefresh={() => refreshAtlas(client, contextId)}
+          onRefresh={() => refreshAtlas(client, contextId, 'panel')}
         />
       </div>
 

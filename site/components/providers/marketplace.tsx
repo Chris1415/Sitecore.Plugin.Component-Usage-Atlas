@@ -34,7 +34,12 @@ export const MarketplaceProvider: React.FC<ClientSDKProviderProps> = ({
       client.query("application.context").then((res) => {
         if (res?.data) {
           setAppContext(res.data);
-          console.log("appContext", res.data);
+          // M4 fix from code-review-20260428T110500Z: do NOT log the
+          // application.context payload — it carries tenant/context IDs
+          // that ADR-0013 forbids surfacing in any telemetry channel
+          // (including the browser console). The debug panel (T074)
+          // gates its output on `?debug=1` and only exposes the
+          // telemetry ring buffer, which is sanitized at the call site.
         }
       });
     }

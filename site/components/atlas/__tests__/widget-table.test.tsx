@@ -152,7 +152,12 @@ describe('<WidgetTable /> — T041', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders no-shared empty state when there are zero renderings and no query', () => {
+  it('renders empty-tenant empty state when there are zero renderings and no query', () => {
+    // M2 fix from code-review-20260428T110500Z: an empty rendering
+    // index means the scan found no pages — the correct copy is
+    // "No published pages", not "Every component is unique to a page".
+    // The "no-shared" mode is reserved for a non-empty atlas where
+    // every rendering happens to be a singleton (a future feature).
     render(
       <WidgetTable
         renderings={new Map()}
@@ -163,7 +168,7 @@ describe('<WidgetTable /> — T041', () => {
       />,
     );
     expect(
-      screen.getByText('Every component is unique to a page'),
+      screen.getByText('No published pages'),
     ).toBeInTheDocument();
   });
 

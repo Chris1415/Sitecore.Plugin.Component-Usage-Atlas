@@ -73,18 +73,25 @@ import type {
   Site,
 } from '@/lib/sdk/types';
 
+export type ScanSurface = 'widget' | 'panel';
+
 export type ScanInput = {
   readonly client: ClientSDK;
   readonly contextId: string;
   readonly scope: AtlasScope;
+  /**
+   * The surface that initiated the scan. Used to tag every telemetry
+   * event emitted by this run. Defaults to `'widget'` for backwards
+   * compatibility with callers (and tests) that don't supply it.
+   * M5 fix from code-review-20260428T110500Z.
+   */
+  readonly surface?: ScanSurface;
 };
 
 export type ScanHandle = {
   readonly cancel: () => void;
   readonly donePromise: Promise<void>;
 };
-
-const SURFACE = 'widget' as const;
 
 const initialProgress = (
   phase: ScanProgress['phase'],
@@ -144,6 +151,7 @@ const safeTransitionToError = (reason: AtlasErrorReason): void => {
 
 export function runScan(input: ScanInput): ScanHandle {
   const { client, contextId, scope } = input;
+  const surface: ScanSurface = input.surface ?? 'widget';
   const bus = createAbortBus();
   const startedAt = Date.now();
 
@@ -174,7 +182,7 @@ export function runScan(input: ScanInput): ScanHandle {
       track({
         timestamp_ms: Date.now(),
         kind: 'scan_started',
-        surface: SURFACE,
+        surface,
         scopeKind: scope.kind,
       });
 
@@ -190,7 +198,7 @@ export function runScan(input: ScanInput): ScanHandle {
         track({
           timestamp_ms: Date.now(),
           kind: 'scan_error',
-          surface: SURFACE,
+          surface,
           reasonKind: reason.kind,
         });
         return;
@@ -205,7 +213,7 @@ export function runScan(input: ScanInput): ScanHandle {
       track({
         timestamp_ms: Date.now(),
         kind: 'phase_transition',
-        surface: SURFACE,
+        surface,
         from: 'sites',
         to: 'pages',
       });
@@ -275,7 +283,7 @@ export function runScan(input: ScanInput): ScanHandle {
       track({
         timestamp_ms: Date.now(),
         kind: 'phase_transition',
-        surface: SURFACE,
+        surface,
         from: 'pages',
         to: 'components',
       });
@@ -295,7 +303,7 @@ export function runScan(input: ScanInput): ScanHandle {
         track({
           timestamp_ms: Date.now(),
           kind: 'scan_canceled',
-          surface: SURFACE,
+          surface,
           pages: pageStubs.length,
           skipped: atlas.skipped.length,
         });
@@ -304,7 +312,7 @@ export function runScan(input: ScanInput): ScanHandle {
         track({
           timestamp_ms: Date.now(),
           kind: 'scan_completed',
-          surface: SURFACE,
+          surface,
           pages: pageStubs.length,
           skipped: atlas.skipped.length,
           renderings: atlas.totals.renderings,
@@ -327,7 +335,7 @@ export function runScan(input: ScanInput): ScanHandle {
       track({
         timestamp_ms: Date.now(),
         kind: 'scan_error',
-        surface: SURFACE,
+        surface,
         message: err instanceof Error ? err.message : String(err),
       });
     } finally {

@@ -29,9 +29,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { Badge } from '@/components/ui/badge';
+import { useMemo } from 'react';
 import { RenderingNameCell } from '@/components/atlas/rendering-name-cell';
 import { DrawerRow } from '@/components/atlas/drawer-row';
 import { DirectBindingsAffordance } from '@/components/atlas/direct-bindings-affordance';
+import { computeCollisions } from '@/lib/collisions';
 import type { RenderingUsage } from '@/lib/sdk/types';
 
 export type UsageDrawerProps = {
@@ -51,6 +53,14 @@ export function UsageDrawer({
   onClose,
   onNavigate,
 }: UsageDrawerProps): React.ReactElement {
+  // Drawer renders only one `<RenderingNameCell />` (in the header), so
+  // the collision-map perf concern is small here — but threading the
+  // memoized map keeps the API consistent and avoids the cell falling
+  // back to the local-recompute path.
+  const collisionMap = useMemo(
+    () => computeCollisions(Array.from(allRenderings.values())),
+    [allRenderings],
+  );
   return (
     <Sheet open={open} onOpenChange={(next) => (next ? null : onClose())}>
       <SheetContent
@@ -65,6 +75,7 @@ export function UsageDrawer({
                 renderingId={rendering.renderingId}
                 renderingName={rendering.displayName}
                 allRenderings={allRenderings}
+                collisionMap={collisionMap}
               />
             </SheetTitle>
             <Badge colorScheme="primary" size="sm">

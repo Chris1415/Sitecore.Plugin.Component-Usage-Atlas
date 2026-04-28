@@ -38,6 +38,7 @@ import { Icon } from '@/lib/icon';
 import { Badge } from '@/components/ui/badge';
 import { RenderingNameCell } from '@/components/atlas/rendering-name-cell';
 import { AtlasEmptyState } from '@/components/atlas/empty-state';
+import { computeCollisions } from '@/lib/collisions';
 import type { RenderingUsage } from '@/lib/sdk/types';
 import { cn } from '@/lib/utils';
 
@@ -129,6 +130,16 @@ export function WidgetTable({
   const isEmptyAtlas = renderings.size === 0;
   const hasMatches = filteredAndSorted.length > 0;
 
+  // M1 fix from code-review-20260428T110500Z: compute the collision map
+  // ONCE here and hand it to every `<RenderingNameCell />` so the row
+  // render path stays O(1) per row instead of O(N) per row (the inner
+  // `Array.from(allRenderings.values())` previously made the table
+  // O(N²) overall).
+  const collisionMap = useMemo(
+    () => computeCollisions(Array.from(allRenderings.values())),
+    [allRenderings],
+  );
+
   return (
     <div
       className={cn(
@@ -156,8 +167,13 @@ export function WidgetTable({
       </div>
 
       {isEmptyAtlas ? (
+        // M2 fix from code-review-20260428T110500Z: an empty rendering
+        // index means the scan found no pages — render the "empty
+        // tenant" copy. The "no-shared" mode is reserved for "atlas is
+        // non-empty but every rendering is a singleton" (a future
+        // feature; today it's never reachable).
         <div className="widget-empty py-8">
-          <AtlasEmptyState mode="no-shared" />
+          <AtlasEmptyState mode="empty-tenant" />
         </div>
       ) : !hasMatches ? (
         <div className="widget-empty py-8">
@@ -197,6 +213,7 @@ export function WidgetTable({
                     renderingId={r.renderingId}
                     renderingName={r.displayName}
                     allRenderings={allRenderings}
+                    collisionMap={collisionMap}
                   />
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums">

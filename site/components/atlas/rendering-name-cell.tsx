@@ -9,10 +9,18 @@
 // for screen readers and on hover.
 //
 // Visual vocabulary tracks `.rendering-cell` from poc-v2/styles.css.
+//
+// Performance note (M1 fix from code-review-20260428T110500Z):
+// Callers should pass an already-computed `collisionMap` so the
+// O(N) collision pass runs once per render of the parent table, not
+// O(N) per row (which would be O(N²) overall). When `collisionMap` is
+// omitted the cell falls back to computing the map locally — this is
+// kept for backwards-compat with single-row test fixtures that hand the
+// cell a 1-element `allRenderings` map.
 
 import type * as React from 'react';
 import { cn } from '@/lib/utils';
-import { computeCollisions } from '@/lib/collisions';
+import { computeCollisions, type CollisionEntry } from '@/lib/collisions';
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +32,13 @@ export type RenderingNameCellProps = {
   readonly renderingId: string;
   readonly renderingName: string;
   readonly allRenderings: ReadonlyMap<string, RenderingUsage>;
+  /**
+   * Optional precomputed collision map — produced once at the parent
+   * (e.g. `<WidgetTable />` or `<RenderingImpactList />`) via
+   * `computeCollisions(Array.from(allRenderings.values()))` and passed
+   * down so the O(N) collision pass is not repeated per row.
+   */
+  readonly collisionMap?: ReadonlyMap<string, CollisionEntry>;
   readonly className?: string;
 };
 
@@ -31,13 +46,15 @@ export function RenderingNameCell({
   renderingId,
   renderingName,
   allRenderings,
+  collisionMap,
   className,
 }: RenderingNameCellProps): React.ReactElement {
   const me = allRenderings.get(renderingId);
   const isUnknown = me?.isUnknown ?? false;
 
-  const collisionMap = computeCollisions(Array.from(allRenderings.values()));
-  const suffix = collisionMap.get(renderingId)?.suffix ?? null;
+  const effectiveMap =
+    collisionMap ?? computeCollisions(Array.from(allRenderings.values()));
+  const suffix = effectiveMap.get(renderingId)?.suffix ?? null;
 
   const accessibleLabel = isUnknown
     ? `Unknown rendering at ${renderingId}`
