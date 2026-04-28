@@ -180,6 +180,45 @@ If host URL + app origin are not supplied at `/test` time, record visual testing
 - `npm run typecheck` — `tsc --noEmit`
 - `npm run build` — Next.js build
 
+## M6 — completion summary (final implementation milestone)
+
+M6 closed the implementation track. All 71 in-scope tasks are committed; T092-T094 are deferred to user-driven post-deploy steps because they require real Sitecore tenant credentials and a deployed Vercel URL.
+
+### What M6 added
+
+- **E5 Panel surface** — `panel-surface.tsx` (composes Zone 1/2/3, no Zone 4), `page-context-card.tsx`, `rendering-impact-list.tsx`, `datasource-impact-group.tsx`, `missing-datasource-warning.tsx`. Subscribes to `pages.context` (per `client.md` § 6a path A) on mount; per-page fetch on a SEPARATE `AbortBus` (OQ-A5) so the rendering stack paints in <1s even while the global scan is in flight; cleans up subscription + fetch on unmount.
+- **E8 Edge handling** — `<DirectBindingsAffordance />` now mounted in panel Zone 2 in addition to widget Zone 2 (verified across all 4 atlas states); "(unknown rendering)" virtual row in `<WidgetTable />` collapses every `isUnknown:true` entry into one labeled row whose Total cell sums the synthetic group; forbidden-page handling in `<UsageDrawer />` honored on both surfaces (panel test asserts `client.mutate` is NOT called on a forbidden row).
+- **E7 Telemetry verification** — `surface_mounted` events emitted by both `<WidgetSurface />` and `<PanelSurface />` on first mount; new `core/__tests__/telemetry-conformance.test.ts` enumerates every `TelemetryEventKind`, asserts no PII keys leak, asserts the ring buffer drops oldest beyond 500 (FIFO), AND runs the anti-metric guard as a vitest test (DoD-4) so the gate fires inside `npm run test` regardless of the npm script gate; `<DebugPanel />` reveals `getBuffer()` JSON when `?debug=1` is on the URL.
+- **E9 Build / CI** — `scripts/check-antimetrics.mjs` (T075) plus `scripts/audit-network.mjs` (T091) plus `scripts/__tests__/*.test.mjs` driving each from a tmpdir fixture; new npm scripts `audit:network`, `audit:anti-metric`, `check:antimetrics` (alias for compat with the pre-existing breakdown text), and a composite `ci` script that chains lint + typecheck + test + build + audit:network + audit:anti-metric. Composite `npm run ci` exits 0.
+
+### Test count delta
+
+| Milestone | Tests | Files |
+|---|---|---|
+| M5 baseline | 166 | 25 |
+| M6 GREEN | 216 | 32 |
+| Delta | +50 | +7 |
+
+### Verification gate (run from `site/`)
+
+| Command | Result |
+|---|---|
+| `npm run lint` | exit 0 (2 pre-M6 warnings on Blok `<img>` — non-load-bearing) |
+| `npm run typecheck` | exit 0 |
+| `npm run test` | exit 0; 216/216 across 32 files |
+| `npm run build` | exit 0; both `/widget` and `/panel` prerender as static |
+| `npm run audit:network` | exit 0; 0 raw fetch/XHR/sendBeacon outside SDK |
+| `npm run audit:anti-metric` | exit 0; 0 forbidden KPI strings |
+| `npm run ci` | exit 0 (composite gate) |
+
+### Deferred to user (T092-T094)
+
+These three tasks are explicitly out of scope for the Developer agent and stay deferred on the run-manifest until a user-driven post-deploy session can drive them:
+
+- **T092 — Configure Vercel project root.** Requires Vercel dashboard access; project root must be set to `products/component-usage-atlas/site`. Done once per repo — no code changes.
+- **T093 — Cloud Portal registration paste.** Requires `Organization Admin` or `Organization Owner` role in a real Sitecore tenant; routes are `/widget` and `/panel`; scopes are `xmc.agent.read` + `xmc.sites.read`.
+- **T094 — Real-tenant smoke test (host-frame).** Per `host-frame-testing.md`, the canonical visual test is the clipped iframe inside the live host. Requires user-supplied host URL + app origin; if missing at `/test` time, record as **deferred — host URL not supplied** with **WARN** verdict.
+
 ## Handoff Metadata
 
 - Canonical run manifest: `products/component-usage-atlas/project-planning/workflow/run-20260427T104955Z.json`

@@ -11,7 +11,11 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:antimetrics": "node scripts/check-antimetrics.mjs",
+    "audit:network": "node scripts/audit-network.mjs",
+    "audit:anti-metric": "node scripts/check-antimetrics.mjs",
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build && npm run audit:network && npm run audit:anti-metric"
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",

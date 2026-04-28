@@ -31,6 +31,7 @@ import {
   refreshAtlas,
   triggerScan,
 } from '@/core/atlas-actions';
+import { track } from '@/core/telemetry';
 import { ScanStatusBar } from '@/components/atlas/scan-status-bar';
 import { DirectBindingsAffordance } from '@/components/atlas/direct-bindings-affordance';
 import { CounterRail } from '@/components/atlas/counter-rail';
@@ -200,6 +201,11 @@ export function WidgetSurface({
     if (state.kind === 'idle') {
       triggerScan({ kind: 'all-collections' }, client, contextId);
     }
+    track({
+      timestamp_ms: Date.now(),
+      kind: 'surface_mounted',
+      surface: 'widget',
+    });
     // We deliberately depend only on the bare minimum so a state change
     // mid-scan doesn't re-trigger. A full restart goes through the
     // refreshAtlas action.

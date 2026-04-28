@@ -84,16 +84,46 @@ export function WidgetTable({
 }: WidgetTableProps): React.ReactElement {
   const allRenderings = renderings;
 
+  // T081 — collapse all isUnknown:true entries into ONE virtual row
+  // labeled "(unknown rendering)". The synthetic group's `renderingId`
+  // is the FIRST member's ID — onSelectRendering(virtualId) routes the
+  // drawer to that synthetic record, and the drawer's per-page rows
+  // expand the placeholder breakdown via the `unknown:<page>:<placeholder>:<index>`
+  // synthetic key (the ID itself encodes the breakdown).
   const filteredAndSorted = useMemo(() => {
     const all = Array.from(renderings.values());
+    const knowns: RenderingUsage[] = [];
+    const unknowns: RenderingUsage[] = [];
+    for (const r of all) {
+      if (r.isUnknown) unknowns.push(r);
+      else knowns.push(r);
+    }
+
+    let virtual: RenderingUsage | null = null;
+    if (unknowns.length > 0) {
+      const firstId = unknowns[0]!.renderingId;
+      const totalUsages = unknowns.reduce((acc, u) => acc + u.totalUsages, 0);
+      const pages = unknowns.flatMap((u) => u.pages);
+      const datasources = Array.from(
+        new Set(unknowns.flatMap((u) => u.datasources)),
+      );
+      virtual = {
+        renderingId: firstId,
+        displayName: '(unknown rendering)',
+        isUnknown: true,
+        totalUsages,
+        pages,
+        datasources,
+      };
+    }
+
+    const candidates: RenderingUsage[] = virtual ? [...knowns, virtual] : knowns;
     const filtered = query.trim()
-      ? all.filter((r) =>
+      ? candidates.filter((r) =>
           r.displayName.toLowerCase().includes(query.toLowerCase()),
         )
-      : all;
-    return filtered
-      .slice()
-      .sort((a, b) => b.totalUsages - a.totalUsages);
+      : candidates;
+    return filtered.slice().sort((a, b) => b.totalUsages - a.totalUsages);
   }, [renderings, query]);
 
   const isEmptyAtlas = renderings.size === 0;
