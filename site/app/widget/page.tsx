@@ -1,22 +1,23 @@
 "use client";
 
-// T009 — placeholder widget surface; <WidgetSurface /> implementation arrives in E4 (T040+).
-// Uses the "Full hooks" template from client.md § 3a — call useMarketplaceClient() and
-// useAppContext() so the route resolves only when the MarketplaceProvider has handshaken
-// with the host frame. Outside the portal iframe, the provider's loader shows instead.
+// T040 — Widget route. Thin wrapper that resolves the SDK client +
+// the sitecoreContextId from the Marketplace provider, then renders
+// `<WidgetSurface />`. The provider's loader is shown until handshake
+// completes, so by the time this component runs both hooks return
+// non-null values.
+//
+// We intentionally do NOT call `useEffect`-style lifecycle here — the
+// scan trigger lives inside `<WidgetSurface />` so the surface itself
+// is the testable unit. The route is a 1:1 plumbing layer.
 
 import { useMarketplaceClient, useAppContext } from "@/components/providers/marketplace";
+import { requireContextId } from "@/core/context-resolver";
+import { WidgetSurface } from "@/components/atlas/widget-surface";
 
 export default function WidgetPage() {
-  // Acquire the SDK client + application context. These hooks throw outside the provider,
-  // matching ADR-0014's "smoke-test only at /widget or /panel" rule.
   const client = useMarketplaceClient();
   const appContext = useAppContext();
+  const contextId = requireContextId(appContext);
 
-  // Reference values so unused-locals lint doesn't strip the hooks before they're consumed
-  // by the real surface. Removed when T040 lands.
-  void client;
-  void appContext;
-
-  return <div>Widget surface — pending implementation</div>;
+  return <WidgetSurface client={client} contextId={contextId} />;
 }
