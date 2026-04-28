@@ -259,7 +259,7 @@ export function PanelSurface({
           siteName: '',
           language: 'en',
         };
-        const result = await fetchComponents(client, contextId, stub, bus.signal);
+        const result = await fetchComponents(client, contextId, stub, bus.signal, 'panel');
         if (!alive || bus.signal.aborted) return;
         setPageComponents({ forPageId: activePageId, components: result });
       } catch (err) {

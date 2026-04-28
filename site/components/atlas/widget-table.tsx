@@ -135,8 +135,20 @@ export function WidgetTable({
   // render path stays O(1) per row instead of O(N) per row (the inner
   // `Array.from(allRenderings.values())` previously made the table
   // O(N²) overall).
+  //
+  // m_NEW3 fix from test-report-20260428T122500Z: exclude `isUnknown`
+  // entries from the collision input. Multiple unknowns share the
+  // display name "(unknown rendering)" but are collapsed into ONE
+  // virtual row whose `renderingId` matches the first member's ID.
+  // Including them would make `computeCollisions` see N synthetic
+  // entries colliding on the same name and append a `· <last-7-of-id>`
+  // suffix to the virtual row — making it appear as if the placeholder
+  // collides with itself.
   const collisionMap = useMemo(
-    () => computeCollisions(Array.from(allRenderings.values())),
+    () =>
+      computeCollisions(
+        Array.from(allRenderings.values()).filter((r) => !r.isUnknown),
+      ),
     [allRenderings],
   );
 

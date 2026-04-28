@@ -11,6 +11,17 @@
 
 import { track } from '@/core/telemetry';
 
+/**
+ * The surface that initiated a scan or per-page fetch. Used to tag every
+ * telemetry event so cross-surface analysis (panel vs widget rate-limit
+ * hit-rates, error rates, etc.) stays coherent.
+ *
+ * Defined here (and not in `scan-engine.ts`) to avoid a circular import:
+ * `withBackoff` lives in `scan-config.ts` and needs to tag its
+ * `rate_limit_retry` event with the originating surface.
+ */
+export type ScanSurface = 'widget' | 'panel';
+
 export const SCAN_CONCURRENCY = 8;
 export const PER_PAGE_TIMEOUT_MS = 12_000;
 export const RATE_LIMIT_BACKOFF = {
@@ -44,11 +55,29 @@ const computeBackoffMs = (attempt: number): number => {
   return Math.max(0, base + jitter);
 };
 
+export type WithBackoffOptions = {
+  /**
+   * The surface that initiated the wrapped operation. Threaded into
+   * `rate_limit_retry` telemetry so panel-initiated retries are tagged
+   * `'panel'` (not `'widget'`). Defaults to `'widget'` for backwards
+   * compatibility with existing tests / unsupplied callers.
+   *
+   * M_NEW1 fix from test-report-20260428T122500Z: prior to this the
+   * `rate_limit_retry` event hardcoded `surface: 'widget'`, which
+   * mis-tagged panel-initiated scans on a rate-limited tenant. Now
+   * threaded the same way the M5 fix threaded `surface` through the
+   * scan-engine's own telemetry.
+   */
+  readonly surface?: ScanSurface;
+};
+
 export async function withBackoff<T>(
   fn: () => Promise<T>,
   isRateLimit: (err: unknown) => boolean,
   signal: AbortSignal,
+  options?: WithBackoffOptions,
 ): Promise<T> {
+  const surface: ScanSurface = options?.surface ?? 'widget';
   let lastError: unknown;
   for (let attempt = 0; attempt <= RATE_LIMIT_BACKOFF.maxRetries; attempt += 1) {
     if (signal.aborted) {
@@ -71,7 +100,7 @@ export async function withBackoff<T>(
       track({
         timestamp_ms: Date.now(),
         kind: 'rate_limit_retry',
-        surface: 'widget', // re-mapped by the engine when wired
+        surface,
         attempt: attempt + 1,
         delayMs: Math.round(delay),
       });

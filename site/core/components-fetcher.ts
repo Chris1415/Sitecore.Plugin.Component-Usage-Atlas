@@ -27,6 +27,7 @@
 
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 
+import type { ScanSurface } from '@/core/scan-config';
 import { queryComponentsOnPage } from '@/lib/sdk/queries';
 import type { ComponentRecord, PageStub } from '@/lib/sdk/types';
 
@@ -35,6 +36,14 @@ export async function fetchComponents(
   contextId: string,
   page: PageStub,
   signal: AbortSignal,
+  surface?: ScanSurface,
 ): Promise<ReadonlyArray<ComponentRecord>> {
-  return queryComponentsOnPage(client, contextId, page.pageId, page.language, signal);
+  return queryComponentsOnPage(
+    client,
+    contextId,
+    page.pageId,
+    page.language,
+    signal,
+    surface,
+  );
 }

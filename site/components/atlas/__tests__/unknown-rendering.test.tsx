@@ -125,6 +125,33 @@ describe('<WidgetTable /> unknown-rendering virtual row', () => {
     expect(row?.textContent).toContain('3');
   });
 
+  it('virtual row has NO collision suffix even when multiple unknowns share the name (m_NEW3 fix)', () => {
+    // 3 unknowns all carry the same display name "(unknown rendering)" by
+    // design (AR-9). Before m_NEW3 was fixed, the collisionMap would see
+    // N synthetic entries colliding on that name and emit a
+    // `· <last-7-of-id>` suffix for the FIRST one's ID — which is the
+    // virtual row's ID. The fix excludes `isUnknown` entries from the
+    // collision input.
+    const renderings = new Map<string, RenderingUsage>([
+      unknown('unknown:p1:main:0', 'p1'),
+      unknown('unknown:p2:main:0', 'p2'),
+      unknown('unknown:p3:body:1', 'p3'),
+    ]);
+    render(
+      <WidgetTable
+        renderings={renderings}
+        query=""
+        density="compact"
+        searchDisabled={false}
+        onSelectRendering={vi.fn()}
+      />,
+    );
+    const row = screen.getByText('(unknown rendering)').closest('tr');
+    expect(row).not.toBeNull();
+    // No suffix element should be rendered inside the virtual row.
+    expect(row!.querySelector('[data-testid="rendering-name-cell-suffix"]')).toBeNull();
+  });
+
   it('does NOT render a virtual row when no isUnknown entries exist', () => {
     const renderings = new Map<string, RenderingUsage>([
       known('rid-hero', 'Hero Banner'),

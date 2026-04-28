@@ -42,7 +42,7 @@
 
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 
-import { PER_PAGE_TIMEOUT_MS, withBackoff } from '@/core/scan-config';
+import { PER_PAGE_TIMEOUT_MS, withBackoff, type ScanSurface } from '@/core/scan-config';
 import type {
   Collection,
   ComponentRecord,
@@ -368,6 +368,7 @@ export async function queryComponentsOnPage(
   pageId: string,
   language: string,
   signal: AbortSignal,
+  surface?: ScanSurface,
 ): Promise<ReadonlyArray<ComponentRecord>> {
   throwIfAborted(signal);
 
@@ -413,7 +414,7 @@ export async function queryComponentsOnPage(
     })();
 
   return withTimeout(
-    withBackoff(fetch, isRateLimit, signal),
+    withBackoff(fetch, isRateLimit, signal, { surface }),
     PER_PAGE_TIMEOUT_MS,
     signal,
   );

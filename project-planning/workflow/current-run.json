@@ -1,11 +1,11 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "run_id": "20260427T104955Z",
   "created_at": "2026-04-27T10:49:55Z",
-  "updated_at": "2026-04-28T12:25:00Z",
+  "updated_at": "2026-04-28T13:15:00Z",
   "product_slug": "component-usage-atlas",
   "product_root": "products/component-usage-atlas",
-  "status": "implemented",
+  "status": "tested_pending_smoke",
   "prd_input_mode": "prompt_only",
   "platform_target": "marketplace",
   "task_breakdown_style": "tdd",
@@ -41,6 +41,7 @@
     "qa_report": null,
     "implementation_runbook": "products/component-usage-atlas/project-planning/plans/implementation-runbook-20260427T104955Z.md",
     "code_review_report": "products/component-usage-atlas/project-planning/plans/code-review-20260428T110500Z.md",
+    "test_report": "products/component-usage-atlas/project-planning/plans/test-report-20260428T122500Z.md",
     "content_model": null,
     "content_examples": null,
     "ship_report": null,
@@ -50,6 +51,32 @@
     "path": "products/component-usage-atlas/project-planning/workflow/friction-log-20260427T104955Z.md",
     "min_severity": "medium",
     "enabled": true
+  },
+  "smoke_outcomes": {
+    "T092_vercel_deploy": {
+      "outcome": "pending",
+      "description": "Deploy site/ to Vercel; record production URL.",
+      "evidence": null,
+      "notes": "Requires user-supplied Vercel project access."
+    },
+    "T093_cloud_portal_registration": {
+      "outcome": "pending",
+      "description": "Register app at Sitecore Cloud Portal with deployed URL; declare xmc:dashboardblocks + xmc:pages:context-panel extension points; grant scopes xmc.agent.read + xmc.sites.read.",
+      "evidence": null,
+      "notes": "Requires Org Admin/Owner role; depends on T092."
+    },
+    "T094_real_tenant_smoke": {
+      "outcome": "pending",
+      "description": "Real-tenant install + clipped iframe screenshots vs pocs/poc-v2 on 5 axes (layout, typography, color, component anatomy, state fidelity); cancel-with-act flow; permission-denied flow; 60fps loading visual.",
+      "evidence": null,
+      "notes": "Per .agent/skills/sitecore/marketplace-sdk/host-frame-testing.md. Host URL + interactive auth user-driven. Depends on T093."
+    },
+    "T113_manual_test_plan": {
+      "outcome": "pending",
+      "description": "Editor-validated manual test plan post real-tenant install — verifies S1, S5 acceptance criteria with real editor users.",
+      "evidence": null,
+      "notes": "Depends on T094 + tenant access for representative editor cohort."
+    }
   },
   "stage_history": [
     {
@@ -118,6 +145,15 @@
       "outcome": "completed",
       "error": null,
       "note": "1 critical + 5 major auto-fixed; 6 minor deferred to user. ADR-0013 telemetry leak (console.log of context IDs in marketplace.tsx) caught + fixed. M5 surface-tag bug for panel-initiated scans fixed. M3 requireContextId bypass + render-time throw wrapped. Final gates all 0; 216/216 tests; PASS."
+    },
+    {
+      "stage": "tested",
+      "agent": "07-qa-specialist",
+      "entered_at": "2026-04-28T12:30:00Z",
+      "exited_at": "2026-04-28T13:15:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "Phase 1 PASS-WITH-CAVEATS (host-frame WARN-deferred — host URL not user-supplied; T094 pending). 0 critical / 2 major (M_NEW1 withBackoff hardcoded surface; M_NEW2 orphan scaffold ADR-0013 leak) + 1 minor (m_NEW3 unknown virtual-row collision suffix). Phase 2 Developer fixed all 2 majors + the minor; orphan components/examples/ tree deleted; surface threading reaches withBackoff; collision suffix excludes virtual unknowns. Test count 216 → 219; all gates 0 (lint/typecheck/test/build/audit:network/audit:anti-metric/ci). Status transitions to tested_pending_smoke per Marketplace+pending-smoke gate."
     }
   ],
   "implementation": {

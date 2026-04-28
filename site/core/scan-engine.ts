@@ -52,7 +52,7 @@ import { fetchComponents } from '@/core/components-fetcher';
 import { freezeAtlas } from '@/core/atlas-freeze';
 import { buildIndices } from '@/core/index-builder';
 import { enumeratePages } from '@/core/pages-enumerator';
-import { SCAN_CONCURRENCY } from '@/core/scan-config';
+import { SCAN_CONCURRENCY, type ScanSurface } from '@/core/scan-config';
 import { transitionTo } from '@/core/scan-state-machine';
 import {
   createSiteLanguageCache,
@@ -73,7 +73,10 @@ import type {
   Site,
 } from '@/lib/sdk/types';
 
-export type ScanSurface = 'widget' | 'panel';
+// Re-export `ScanSurface` from scan-config for backwards compatibility.
+// The canonical definition lives in scan-config.ts so withBackoff can
+// reference it without forming a circular import.
+export type { ScanSurface };
 
 export type ScanInput = {
   readonly client: ClientSDK;
@@ -289,7 +292,7 @@ export function runScan(input: ScanInput): ScanHandle {
       });
 
       const componentResults = await runWithConcurrency<ReadonlyArray<ComponentRecord>>(
-        pageStubs.map((stub) => () => fetchComponents(client, contextId, stub, bus.signal)),
+        pageStubs.map((stub) => () => fetchComponents(client, contextId, stub, bus.signal, surface)),
         SCAN_CONCURRENCY,
         bus.signal,
       );

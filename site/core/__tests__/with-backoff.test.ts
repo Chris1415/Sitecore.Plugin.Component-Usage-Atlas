@@ -9,6 +9,7 @@ import {
   withBackoff,
 } from '@/core/scan-config';
 import { createAbortBus } from '@/core/abort-bus';
+import { clearBuffer, getBuffer } from '@/core/telemetry';
 
 const isRateLimit = (err: unknown): boolean =>
   typeof err === 'object' && err !== null && 'status' in err && (err as { status?: number }).status === 429;
@@ -108,5 +109,39 @@ describe('withBackoff', () => {
     expect(RATE_LIMIT_BACKOFF.maxRetries).toBe(4);
     expect(RATE_LIMIT_BACKOFF.baseMs).toBe(250);
     expect(RATE_LIMIT_BACKOFF.jitterPercent).toBe(20);
+  });
+
+  it('rate_limit_retry telemetry tags surface=panel when invoked from panel surface (M_NEW1 fix)', async () => {
+    clearBuffer();
+    const fn = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(rateLimitError())
+      .mockResolvedValueOnce('ok');
+
+    const bus = createAbortBus();
+    const promise = withBackoff(fn, isRateLimit, bus.signal, { surface: 'panel' });
+    await vi.runAllTimersAsync();
+    await expect(promise).resolves.toBe('ok');
+
+    const retries = getBuffer().filter((e) => e.kind === 'rate_limit_retry');
+    expect(retries.length).toBe(1);
+    expect(retries[0]!.surface).toBe('panel');
+  });
+
+  it('rate_limit_retry telemetry defaults to surface=widget when no surface supplied (backwards compat)', async () => {
+    clearBuffer();
+    const fn = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(rateLimitError())
+      .mockResolvedValueOnce('ok');
+
+    const bus = createAbortBus();
+    const promise = withBackoff(fn, isRateLimit, bus.signal);
+    await vi.runAllTimersAsync();
+    await expect(promise).resolves.toBe('ok');
+
+    const retries = getBuffer().filter((e) => e.kind === 'rate_limit_retry');
+    expect(retries.length).toBe(1);
+    expect(retries[0]!.surface).toBe('widget');
   });
 });
