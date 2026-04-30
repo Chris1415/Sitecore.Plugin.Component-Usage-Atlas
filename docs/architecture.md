@@ -63,15 +63,35 @@ event so that when the editor switches pages in Pages, the panel updates in
 place without re-scanning the tenant.
 
 - **Page Context Card** — the active page's path and metadata at the top.
-- **Rendering Impact List** — every rendering on the active page with a
-  `+N other pages use this` counter that resolves once the global scan
-  completes. Clicking a counter opens the same drawer pattern as the widget.
-- **Datasource Impact Group** — every datasource bound to a rendering on the
-  active page with the same cross-tenant counter.
+- **Rendering Impact List** (collapsible mini-accordion) — every rendering on
+  the active page with a `+N other pages use this` counter that resolves once
+  the global scan completes. Each row is **expandable**: clicking a row
+  reveals an inline detail panel below it with two click targets — *"See all
+  pages using this rendering →"* opens the per-rendering drawer (same drawer
+  pattern as the widget); the datasource line opens the per-datasource
+  drawer. Identical placements (same renderingId + same datasourceId) collapse
+  into one row with a `×N` badge so a 12-Container page reads as one row, not
+  twelve.
+- **Lazy item-name resolution** — datasources whose layout reference is a
+  bare GUID or `xpath:`/`/sitecore/...` path are resolved against the
+  Authoring API on first paint via `core/use-datasource-names.ts` and a
+  process-wide cache in `core/datasource-name-cache.ts`. When resolution
+  fails the row falls back to `Item · {short-id}` so the editor still has a
+  correlation hint.
 - **Missing-datasource warnings** — when a page references a datasource that
   no longer exists in the tree.
 - **Direct-bindings affordance** — a non-dismissable note that v1 counts only
   direct datasource bindings (see ADR-0006).
+
+> **Anatomy note (S22/S23 — 2026-04-29 → 2026-04-30):** The original PRD
+> § 5 / FR-8.1 spec called for a separate "Datasource impact" section stacked
+> below the rendering list. Live-tenant smoke immediately surfaced two
+> problems: (a) the cross-tenant datasource counter only makes sense in the
+> context of the rendering that binds it, and (b) the stacked layout broke
+> the rendering↔datasource visual link past 20+ items. The panel was
+> reshaped into a single nested tree; `<DatasourceImpactGroup />` is no
+> longer mounted on the panel surface (kept in the codebase for potential
+> widget-side reuse).
 
 The per-page render uses a separate `AbortBus` from the global scan, so the
 panel paints in under one second on page-switch even while the global scan

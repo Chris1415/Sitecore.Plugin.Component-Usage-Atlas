@@ -54,6 +54,22 @@ export async function enumerateSites(
     );
   }
 
+  if (scope.kind === 'site') {
+    // S21 — narrow the enumeration to the single site whose name matches
+    // the host context. If the host's site isn't in the tenant's site
+    // list (revoked permissions, draft state, etc.), return [] — the
+    // surface renders the empty-state copy.
+    const match = summaries.find((s) => s.siteName === scope.siteName);
+    if (!match) return [];
+    return [
+      {
+        siteId: match.siteId,
+        siteName: match.siteName,
+        displayName: match.siteName,
+      },
+    ];
+  }
+
   // scope.kind === 'collection' — we need each site's `collectionId` to
   // filter. The lean agent endpoint doesn't supply it, so for each
   // site we issue `retrieveSite` (which carries `collectionId`).

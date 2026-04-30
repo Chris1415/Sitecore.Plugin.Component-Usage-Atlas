@@ -7,12 +7,52 @@ search, and a **Page Context Panel** for page-centric impact analysis. The atlas
 is built fresh in the iframe heap on demand, cached for the tab's lifetime, and
 discarded on tab close. No backend, no persisted index, no scheduled jobs.
 
-> Screenshot pending real-tenant smoke (clipped iframe inside Cloud Portal vs
-> the `pocs/poc-v2/` clickdummy). The image at the link below will be added
-> post-deploy. Visual ground truth until then is the POC reference at
-> [pocs/poc-v2/](pocs/poc-v2/).
+## Screenshots
 
-![Component Usage Atlas — Page Context Panel](docs/images/screenshot-panel.png)
+Captured from a live XM Cloud tenant (Christian Hahn solo-website, "Dog feeding
+App" registration). One Marketplace app, two surfaces.
+
+### Dashboard Widget — `xmc:dashboardblocks`
+
+Search-first table of every rendering in the host site, sorted by total
+placements. Each row shows placements, distinct pages, datasource count, and a
+rarity badge. The freshness ribbon at the top names the host site (`site
+solo-website`) and the totals from the last completed scan; the `Refresh atlas`
+button replays the scan with the same scope.
+
+![Dashboard Widget — collapsed](docs/images/widget-collapsed.png)
+
+Click a row to inline-expand the detail block beneath it. Two columns scroll
+independently as the lists grow: **left** is `Direct rendering usage · N pages`
+(every page binding this rendering, with a `×N` badge per page when there's
+more than one placement on that page); **right** is `Datasources · M`
+(every datasource bound by any placement of this rendering, color-tagged for
+cross-row hover affinity). Hovering a datasource on the right highlights the
+matching pages on the left.
+
+![Dashboard Widget — row expanded with two-pane detail](docs/images/widget-expanded.png)
+
+### Page Context Panel — `xmc:pages:context-panel`
+
+For the active page, lists every rendering on it. Each row pairs a
+cross-tenant `+N other pages` counter with the rendering name and the
+datasource it binds (color-tagged with a path hint or short-id fallback).
+Identical placements (same rendering + same datasource) collapse into one
+row with a `×N` badge so a 12-Container page reads as a 1-row entry, not a
+12-row scroll. Clicking a row expands a nested affordance: "See all pages
+using this rendering →" opens the per-rendering drawer; the datasource line
+opens the per-datasource drawer (cross-tenant pages binding it).
+
+![Page Context Panel — overview with collapsed rendering rows](docs/images/panel-overview.png)
+
+The per-rendering drawer answers the *"if I publish this, what else
+breaks?"* question without leaving the active page: full page list with
+per-page placement count, a `× page-count` summary pill, and the locked
+`Direct bindings only` affordance so the editor knows the scope of the
+result. Clicking a page row routes Pages to that page via
+`client.mutate('pages.context')` — no full reload, no lost editor state.
+
+![Page Context Panel — rendering drawer open over the page editor](docs/images/panel-rendering-drawer.png)
 
 ## What this does
 
@@ -40,7 +80,7 @@ the iframe** — installed once, no infrastructure to maintain.
 - **TypeScript** (strict)
 - **Tailwind CSS v4** + **Blok** semantic-token registry (Sitecore design system)
 - **`@sitecore-marketplace-sdk/client@0.3.2`** + **`@sitecore-marketplace-sdk/xmc@0.4.1`** (pinned)
-- **Vitest 4.1.5** + **@testing-library/react** + **jsdom**
+- **Vitest 4.1.5** + **@testing-library/react** + **jsdom** (252 tests across 38 files)
 - **Mode A iframe-only** — no backend, no persistence, no external network egress
 
 ## Getting started
@@ -88,7 +128,7 @@ portal.
 ```bash
 npm run lint           # ESLint
 npm run typecheck      # tsc --noEmit
-npm run test           # Vitest, 219 passing across 32 files
+npm run test           # Vitest, 252 passing across 38 files
 npm run build          # Next.js production build (4 static routes)
 npm run audit:network  # Grep gate — no raw fetch / XHR / sendBeacon outside SDK
 npm run audit:anti-metric

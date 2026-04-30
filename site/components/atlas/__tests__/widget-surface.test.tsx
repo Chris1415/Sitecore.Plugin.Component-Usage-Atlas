@@ -14,7 +14,7 @@
 // pages.context navigation contract).
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import {
   __resetForTest,
   setAtlasState,
@@ -131,10 +131,16 @@ afterEach(() => {
 // --- T040 + T064 (re-mount-during-scan) -------------------------------
 
 describe('<WidgetSurface /> — T040 mount + scan trigger', () => {
-  it('on first mount with state idle, calls triggerScan with all-collections + client + contextId', () => {
+  it('on first mount with state idle, calls triggerScan after site.context resolves', async () => {
     setAtlasState({ kind: 'idle' });
+    // S21: triggerScan now waits for `site.context` to resolve so the
+    // scan can be scoped to the host site. The stub client.query
+    // returns undefined; the resolution effect completes asynchronously,
+    // then triggerScan fires with the all-collections fallback.
     render(<WidgetSurface client={stubClient} contextId={stubContextId} />);
-    expect(triggerScanMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(triggerScanMock).toHaveBeenCalledTimes(1);
+    });
     expect(triggerScanMock).toHaveBeenCalledWith(
       { kind: 'all-collections' },
       stubClient,

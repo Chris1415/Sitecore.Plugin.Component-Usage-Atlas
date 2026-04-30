@@ -25,13 +25,18 @@ describe('<DirectBindingsAffordance /> — T112', () => {
     expect(trigger).toHaveAttribute('aria-label', LOCKED_COPY);
   });
 
-  it('keyboard-reachable: trigger is a focusable button (tabIndex >= 0)', () => {
+  it('S13 — trigger is removed from the keyboard tab order', () => {
+    // Per the S13 fix: when the affordance lives inside a Sheet (rendering
+    // / datasource drawers), Radix Dialog auto-focuses the first focusable
+    // descendant. If the trigger were tabbable, focus would land on it on
+    // every drawer open and Radix Tooltip would pop open without any user
+    // interaction — the very behaviour the user complained about. The
+    // copy is still keyboard-accessible via the aria-label and the glyph
+    // is still hover/click-reachable; we just opt out of the tab order.
     render(<DirectBindingsAffordance />);
     const trigger = screen.getByTestId('direct-bindings-trigger');
-    // Buttons are focusable by default; assert it's a button element.
     expect(trigger.tagName).toBe('BUTTON');
-    // Not explicitly excluded from tab order.
-    expect(trigger.getAttribute('tabIndex')).not.toBe('-1');
+    expect(trigger.getAttribute('tabIndex')).toBe('-1');
   });
 
   it('renders an info glyph with aria-hidden="true" so the icon is not double-announced', () => {

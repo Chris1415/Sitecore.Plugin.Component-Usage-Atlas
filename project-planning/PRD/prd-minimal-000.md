@@ -39,8 +39,8 @@ Ship a Sitecore Marketplace app — `Component Usage Atlas` — that gives edito
 ## In scope / out of scope (very short)
 
 - **In scope (v1):**
-  - Dashboard Widget: search-first table; click-row drawer with per-page list; "Refresh atlas" action; collection-scope dropdown.
-  - Page Context Panel: current-page rendering list; "+N other pages" counters; "Datasource impact" group below the rendering list; missing-datasource warnings.
+  - Dashboard Widget: search-first table; click-row inline detail (two-pane: pages + datasources, independent scroll); "Refresh atlas" action; collection-scope dropdown.
+  - Page Context Panel: current-page rendering list; "+N other pages" counters; **per-row expansion exposing the bound datasource with its own cross-tenant counter** (S22/S23 reshape — replaces the original "Datasource impact group below the rendering list"); missing-datasource warnings; lazy item-name resolution against the Authoring API for GUID-only datasources with `Item · {short-id}` fallback.
   - Live in-memory scan engine, session-scoped cache, manual refresh.
   - Branded loading UX with phase progress, cancel, partial-result preservation.
   - Whole-tenant default + collection-narrowing setting (with edge-case behaviors per AC-3.4..3.6).

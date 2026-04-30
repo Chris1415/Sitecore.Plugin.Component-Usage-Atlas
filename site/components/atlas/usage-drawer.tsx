@@ -34,6 +34,7 @@ import { RenderingNameCell } from '@/components/atlas/rendering-name-cell';
 import { DrawerRow } from '@/components/atlas/drawer-row';
 import { DirectBindingsAffordance } from '@/components/atlas/direct-bindings-affordance';
 import { computeCollisions } from '@/lib/collisions';
+import { dedupePages } from '@/lib/dedupe-pages';
 import type { RenderingUsage } from '@/lib/sdk/types';
 
 export type UsageDrawerProps = {
@@ -61,6 +62,10 @@ export function UsageDrawer({
     () => computeCollisions(Array.from(allRenderings.values())),
     [allRenderings],
   );
+  const dedupedPages = useMemo(
+    () => dedupePages(rendering.pages),
+    [rendering.pages],
+  );
   return (
     <Sheet open={open} onOpenChange={(next) => (next ? null : onClose())}>
       <SheetContent
@@ -68,9 +73,9 @@ export function UsageDrawer({
         className="usage-drawer flex flex-col"
         aria-label={`Usage details for ${rendering.displayName}`}
       >
-        <SheetHeader className="sheet__header">
+        <SheetHeader className="sheet__header pr-14">
           <div className="flex items-center gap-2">
-            <SheetTitle className="sheet__title flex-1">
+            <SheetTitle className="sheet__title flex-1 min-w-0">
               <RenderingNameCell
                 renderingId={rendering.renderingId}
                 renderingName={rendering.displayName}
@@ -78,13 +83,14 @@ export function UsageDrawer({
                 collisionMap={collisionMap}
               />
             </SheetTitle>
-            <Badge colorScheme="primary" size="sm">
+            <Badge colorScheme="primary" size="sm" className="mr-2 shrink-0">
               {rendering.totalUsages} use{rendering.totalUsages === 1 ? '' : 's'}
             </Badge>
           </div>
           <SheetDescription className="sheet__subtitle text-muted-foreground font-mono text-xs">
-            {rendering.pages.length} page
-            {rendering.pages.length === 1 ? '' : 's'} · {rendering.datasources.length}{' '}
+            {dedupedPages.length} page
+            {dedupedPages.length === 1 ? '' : 's'} · {rendering.totalUsages} placement
+            {rendering.totalUsages === 1 ? '' : 's'} · {rendering.datasources.length}{' '}
             datasource{rendering.datasources.length === 1 ? '' : 's'}
           </SheetDescription>
           <div className="pt-1">
@@ -95,14 +101,15 @@ export function UsageDrawer({
         <ScrollArea className="sheet__body min-h-0 flex-1">
           <div className="px-2 py-2">
             <p className="sheet__section-title text-muted-foreground px-2 py-1.5 text-xs uppercase tracking-wide">
-              Direct rendering usage · {rendering.pages.length} pages
+              Direct rendering usage · {dedupedPages.length} page
+              {dedupedPages.length === 1 ? '' : 's'}
             </p>
-            {rendering.pages.length === 0 ? (
+            {dedupedPages.length === 0 ? (
               <div className="text-muted-foreground px-4 py-3 text-sm">
                 No pages currently use this rendering.
               </div>
             ) : (
-              rendering.pages.map((p) => {
+              dedupedPages.map((p) => {
                 const isForbidden = forbiddenPageIds?.has(p.pageId) ?? false;
                 return (
                   <DrawerRow
@@ -119,6 +126,11 @@ export function UsageDrawer({
                     <span className="page-row__meta text-muted-foreground ml-2 font-mono text-xs">
                       · {p.siteName} {p.sitePath}
                     </span>
+                    {p.placements > 1 ? (
+                      <Badge colorScheme="primary" size="sm" className="ml-auto">
+                        ×{p.placements}
+                      </Badge>
+                    ) : null}
                   </DrawerRow>
                 );
               })

@@ -40,6 +40,7 @@ export function DirectBindingsAffordance({
             type="button"
             data-testid="direct-bindings-trigger"
             aria-label={DIRECT_BINDINGS_COPY}
+            tabIndex={-1}
             className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
           >
             <span

@@ -18,19 +18,25 @@ export type AtlasEmptyMode = 'no-results' | 'no-shared' | 'empty-tenant';
 export type AtlasEmptyStateProps = {
   readonly mode: AtlasEmptyMode;
   readonly query?: string;
+  readonly title?: string;
+  readonly description?: string;
 };
 
 export function AtlasEmptyState({
   mode,
   query,
+  title,
+  description,
 }: AtlasEmptyStateProps): React.ReactElement {
   if (mode === 'no-results') {
     const safeQuery = query ?? '';
     return (
       <EmptyStates
         variant="no-search-results"
-        title="No matches"
-        description={`No renderings match \`${safeQuery}\`. Try a partial name.`}
+        title={title ?? 'No matches'}
+        description={
+          description ?? `No renderings match \`${safeQuery}\`. Try a partial name.`
+        }
         actions={null}
       />
     );
@@ -40,8 +46,11 @@ export function AtlasEmptyState({
     return (
       <EmptyStates
         variant="nothing-created"
-        title="Every component is unique to a page"
-        description="This tenant has no shared renderings. Datasources are still indexed below."
+        title={title ?? 'Every component is unique to a page'}
+        description={
+          description ??
+          'This tenant has no shared renderings. Datasources are still indexed below.'
+        }
         actions={null}
       />
     );
@@ -51,8 +60,10 @@ export function AtlasEmptyState({
   return (
     <EmptyStates
       variant="nothing-created"
-      title="No published pages"
-      description="This tenant has no published pages yet."
+      title={title ?? 'No renderings found'}
+      description={
+        description ?? "The scan finished but didn't find any renderings on this tenant's pages."
+      }
       actions={null}
     />
   );

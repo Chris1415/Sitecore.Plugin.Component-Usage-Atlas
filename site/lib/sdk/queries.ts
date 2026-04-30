@@ -318,12 +318,17 @@ export async function queryAllPagesBySite(
 }
 
 const deriveNameFromPath = (path: string): string => {
-  if (typeof path !== 'string' || path.length === 0) return '(home)';
+  if (typeof path !== 'string' || path.length === 0) return 'Home';
   const trimmed = path.replace(/\/+$/, '');
-  if (trimmed.length === 0) return '(home)';
+  if (trimmed.length === 0) return 'Home';
   const parts = trimmed.split('/').filter((p) => p.length > 0);
-  if (parts.length === 0) return '(home)';
-  return parts[parts.length - 1]!;
+  if (parts.length === 0) return 'Home';
+  const raw = parts[parts.length - 1]!;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
 };
 
 // ---------------------------------------------------------------------------

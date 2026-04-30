@@ -37,14 +37,12 @@ import { DirectBindingsAffordance } from '@/components/atlas/direct-bindings-aff
 import { CounterRail } from '@/components/atlas/counter-rail';
 import { DensityToggle, type Density } from '@/components/atlas/density-toggle';
 import { WidgetTable } from '@/components/atlas/widget-table';
-import { UsageDrawer } from '@/components/atlas/usage-drawer';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/lib/icon';
 import type {
   Atlas,
   AtlasState,
-  RenderingUsage,
   Skipped,
 } from '@/lib/sdk/types';
 import { cn } from '@/lib/utils';
@@ -93,10 +91,12 @@ function phaseStatesFor(
 function FreshnessRibbon({
   state,
   totals,
+  hostSiteName,
   onRefresh,
 }: {
   state: AtlasState;
   totals: Atlas['totals'] | null;
+  hostSiteName: string | null;
   onRefresh: () => void;
 }): React.ReactElement {
   const isCanceled = state.kind === 'canceled';
@@ -115,11 +115,16 @@ function FreshnessRibbon({
           {isCanceled ? '⚠' : '✓'}
         </span>
         <span className="freshness__summary text-foreground font-mono tabular-nums">
+          {hostSiteName ? (
+            <>
+              <span className="text-muted-foreground">site </span>
+              <strong>{hostSiteName}</strong>
+              <span className="text-muted-foreground"> · </span>
+            </>
+          ) : null}
           {totals ? (
             <>
               <strong>{totals.pages.toLocaleString('en-US')} pages</strong>
-              <span className="text-muted-foreground"> · </span>
-              <strong>{totals.sites.toLocaleString('en-US')} sites</strong>
               <span className="text-muted-foreground"> · </span>
               <strong>
                 {totals.renderings.toLocaleString('en-US')} renderings
@@ -188,18 +193,75 @@ export function WidgetSurface({
   // the source of truth for everything else.
   const [query, setQuery] = useState('');
   const [density, setDensity] = useState<Density>('compact');
-  const [selectedRenderingId, setSelectedRenderingId] = useState<
+  // D2 v1 — inline expansion replaces the right-side drawer on this
+  // surface. The state semantic is "which row is currently expanded";
+  // empty drawer == collapsed.
+  const [expandedRenderingId, setExpandedRenderingId] = useState<
     string | null
   >(null);
   const [skippedOpen, setSkippedOpen] = useState(false);
+
+  // S21 — The dashboard widget runs under a specific site (Image #15
+  // shows it in the solo-website dashboard). We resolve that site name
+  // via `client.query('site.context')` BEFORE kicking off the scan so
+  // the scan walks only the host site instead of all tenant sites.
+  // SDK contract: `node_modules/@sitecore-marketplace-sdk/client/dist/
+  // sdk-types.d.ts` declares `QueryMap['site.context']` returning
+  // `SiteContext = { siteInfo: { siteId, name, displayName, url, hosts } }`.
+  const [hostSite, setHostSite] = useState<{
+    readonly siteId: string;
+    readonly name: string;
+    readonly displayName: string;
+  } | null>(null);
+  const [hostSiteResolved, setHostSiteResolved] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        const res = (await client.query('site.context')) as {
+          data?: {
+            siteInfo?: {
+              siteId?: string;
+              name?: string;
+              displayName?: string;
+            };
+          };
+        };
+        const info = res?.data?.siteInfo;
+        if (!alive) return;
+        if (info?.name) {
+          setHostSite({
+            siteId: info.siteId ?? '',
+            name: info.name,
+            displayName: info.displayName ?? info.name,
+          });
+        }
+      } catch {
+        // No host site context — fall back to all-collections scope.
+      } finally {
+        if (alive) setHostSiteResolved(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [client]);
 
   // T040 — first-mount scan trigger; T064 — re-mount-during-scan does
   // NOT duplicate the scan because we only call triggerScan when state
   // is 'idle'. atlas-actions also has its own guard, so even if the
   // surface re-mounts during scanning, the second triggerScan no-ops.
+  // S21: hold the trigger until the site.context resolution lands so
+  // we don't fire an all-collections scan only to immediately replace
+  // it with a site-scoped one.
   useEffect(() => {
+    if (!hostSiteResolved) return;
     if (state.kind === 'idle') {
-      triggerScan({ kind: 'all-collections' }, client, contextId);
+      const scope = hostSite
+        ? { kind: 'site' as const, siteName: hostSite.name }
+        : { kind: 'all-collections' as const };
+      triggerScan(scope, client, contextId);
     }
     track({
       timestamp_ms: Date.now(),
@@ -210,24 +272,33 @@ export function WidgetSurface({
     // mid-scan doesn't re-trigger. A full restart goes through the
     // refreshAtlas action.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hostSiteResolved]);
 
   const atlas = visibleAtlas(state);
 
   // Memoize the empty-Map fallback so referential identity is stable
   // across renders when the atlas isn't ready yet (otherwise the React
   // Compiler refuses to memoize downstream consumers).
-  const renderings: ReadonlyMap<string, RenderingUsage> = useMemo(
+  const renderings = useMemo(
     () => atlas?.renderingIndex ?? new Map(),
     [atlas],
   );
-  const skipped: ReadonlyArray<Skipped> = atlas?.skipped ?? [];
+  const skipped: ReadonlyArray<Skipped> = useMemo(
+    () => atlas?.skipped ?? [],
+    [atlas],
+  );
   const totals = atlas?.totals ?? null;
+  void renderings;
 
-  const selectedRendering = useMemo(() => {
-    if (!selectedRenderingId) return null;
-    return renderings.get(selectedRenderingId) ?? null;
-  }, [renderings, selectedRenderingId]);
+  const forbiddenPageIds = useMemo(
+    () =>
+      new Set(
+        skipped
+          .filter((s) => s.reason === 'forbidden')
+          .map((s) => s.pageId),
+      ),
+    [skipped],
+  );
 
   // CounterRail status mapping — drives the cell visual primitive.
   const railStatus: Parameters<typeof CounterRail>[0]['status'] =
@@ -266,6 +337,7 @@ export function WidgetSurface({
           <FreshnessRibbon
             state={state}
             totals={totals}
+            hostSiteName={hostSite?.displayName ?? null}
             onRefresh={() => refreshAtlas(client, contextId)}
           />
         )}
@@ -288,15 +360,28 @@ export function WidgetSurface({
         </div>
       </div>
 
-      {/* Zone 3 — search + table */}
+      {/* Zone 3 — search + table (with inline-expansion detail per D2 v1) */}
       <div className="zone-3 min-h-0 flex-1 overflow-hidden">
         <WidgetTable
-          renderings={renderings}
+          renderings={atlas?.renderingIndex ?? new Map()}
           query={query}
           density={density}
           searchDisabled={searchDisabled}
+          isScanning={state.kind === 'scanning' && !atlas}
           onQueryChange={setQuery}
-          onSelectRendering={(rid) => setSelectedRenderingId(rid)}
+          onSelectRendering={(rid) =>
+            setExpandedRenderingId((prev) => (prev === rid ? null : rid))
+          }
+          expandedRenderingId={expandedRenderingId}
+          atlas={atlas}
+          forbiddenPageIds={forbiddenPageIds}
+          onCollapse={() => setExpandedRenderingId(null)}
+          onNavigatePage={(pageId) => {
+            void client.mutate('pages.context', { params: { itemId: pageId } });
+            setExpandedRenderingId(null);
+          }}
+          client={client}
+          contextId={contextId}
         />
       </div>
 
@@ -308,27 +393,6 @@ export function WidgetSurface({
           onOpenSkipped={() => setSkippedOpen(true)}
         />
       </div>
-
-      {/* Drawer — per-rendering page list */}
-      {selectedRendering ? (
-        <UsageDrawer
-          open={selectedRenderingId !== null}
-          rendering={selectedRendering}
-          allRenderings={renderings}
-          forbiddenPageIds={
-            new Set(
-              skipped
-                .filter((s) => s.reason === 'forbidden')
-                .map((s) => s.pageId),
-            )
-          }
-          onClose={() => setSelectedRenderingId(null)}
-          onNavigate={(pageId) => {
-            void client.mutate('pages.context', { params: { itemId: pageId } });
-            setSelectedRenderingId(null);
-          }}
-        />
-      ) : null}
 
       {/* Skipped pages sub-drawer */}
       <SkippedDrawer

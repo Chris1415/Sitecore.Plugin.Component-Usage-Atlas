@@ -19,7 +19,8 @@
 // implementation diff is easy.
 
 import type * as React from 'react';
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
+import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 import { mdiMagnify } from '@mdi/js';
 import {
   Table,
@@ -38,8 +39,10 @@ import { Icon } from '@/lib/icon';
 import { Badge } from '@/components/ui/badge';
 import { RenderingNameCell } from '@/components/atlas/rendering-name-cell';
 import { AtlasEmptyState } from '@/components/atlas/empty-state';
+import { RenderingInlineDetail } from '@/components/atlas/rendering-inline-detail';
+import { WidgetTableSkeleton } from '@/components/atlas/widget-table-skeleton';
 import { computeCollisions } from '@/lib/collisions';
-import type { RenderingUsage } from '@/lib/sdk/types';
+import type { Atlas, RenderingUsage } from '@/lib/sdk/types';
 import { cn } from '@/lib/utils';
 
 const NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
@@ -49,8 +52,25 @@ export type WidgetTableProps = {
   readonly query: string;
   readonly density: 'compact' | 'comfortable';
   readonly searchDisabled: boolean;
+  // S17 — when true, render the skeleton instead of the empty-state CTA;
+  // surface passes `state.kind === 'scanning' && !atlas`.
+  readonly isScanning?: boolean;
   readonly onQueryChange?: (next: string) => void;
   readonly onSelectRendering: (renderingId: string) => void;
+  // D2 v1 — inline expansion (replaces the right-side drawer on the
+  // dashboard surface). The widget surface owns expand state; we render
+  // <RenderingInlineDetail /> as a fullspan row directly under the
+  // matching rendering.
+  readonly expandedRenderingId?: string | null;
+  readonly atlas?: Atlas | null;
+  readonly forbiddenPageIds?: ReadonlySet<string>;
+  readonly onCollapse?: () => void;
+  readonly onNavigatePage?: (pageId: string) => void;
+  // S22 — passed through to <RenderingInlineDetail /> so it can resolve
+  // GUID datasource names via the Authoring API instead of showing
+  // "Unnamed item" / a short-id fallback.
+  readonly client?: ClientSDK | null;
+  readonly contextId?: string | null;
 };
 
 function rarityBadge(usage: RenderingUsage): React.ReactElement {
@@ -80,8 +100,16 @@ export function WidgetTable({
   query,
   density,
   searchDisabled,
+  isScanning,
   onQueryChange,
   onSelectRendering,
+  expandedRenderingId,
+  atlas,
+  forbiddenPageIds,
+  onCollapse,
+  onNavigatePage,
+  client,
+  contextId,
 }: WidgetTableProps): React.ReactElement {
   const allRenderings = renderings;
 
@@ -179,14 +207,22 @@ export function WidgetTable({
       </div>
 
       {isEmptyAtlas ? (
-        // M2 fix from code-review-20260428T110500Z: an empty rendering
-        // index means the scan found no pages — render the "empty
-        // tenant" copy. The "no-shared" mode is reserved for "atlas is
-        // non-empty but every rendering is a singleton" (a future
-        // feature; today it's never reachable).
-        <div className="widget-empty py-8">
-          <AtlasEmptyState mode="empty-tenant" />
-        </div>
+        // S17: while the scan is in flight and the atlas hasn't produced
+        // rows yet, render a skeleton instead of the "empty tenant" CTA.
+        // The empty CTA is reserved for the post-scan-zero-result case.
+        isScanning ? (
+          <div className="widget-skeleton-wrap px-4 pt-3 pb-4">
+            <WidgetTableSkeleton />
+          </div>
+        ) : (
+          <div className="widget-empty py-8">
+            <AtlasEmptyState
+              mode="empty-tenant"
+              title="No renderings found"
+              description="The scan finished but didn't find any renderings on this tenant's pages. Refresh once more or check the skipped pages list for blockers."
+            />
+          </div>
+        )
       ) : !hasMatches ? (
         <div className="widget-empty py-8">
           <AtlasEmptyState mode="no-results" query={query} />
@@ -199,47 +235,74 @@ export function WidgetTable({
           <TableHeader>
             <TableRow>
               <TableHead>Rendering</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-right">Used on</TableHead>
+              <TableHead className="text-right">Placements</TableHead>
+              <TableHead className="text-right">Pages</TableHead>
               <TableHead className="text-right">Datasources</TableHead>
               <TableHead>Rarity</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSorted.map((r) => (
-              <TableRow
-                key={r.renderingId}
-                tabIndex={0}
-                onClick={() => onSelectRendering(r.renderingId)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onSelectRendering(r.renderingId);
-                  }
-                }}
-                className="cursor-pointer"
-                data-rendering-id={r.renderingId}
-              >
-                <TableCell>
-                  <RenderingNameCell
-                    renderingId={r.renderingId}
-                    renderingName={r.displayName}
-                    allRenderings={allRenderings}
-                    collisionMap={collisionMap}
-                  />
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {NUMBER_FORMATTER.format(r.totalUsages)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {NUMBER_FORMATTER.format(r.pages.length)}
-                </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {NUMBER_FORMATTER.format(r.datasources.length)}
-                </TableCell>
-                <TableCell>{rarityBadge(r)}</TableCell>
-              </TableRow>
-            ))}
+            {filteredAndSorted.map((r) => {
+              const isExpanded = expandedRenderingId === r.renderingId;
+              const distinctPages = new Set(r.pages.map((p) => p.pageId)).size;
+              return (
+                <Fragment key={r.renderingId}>
+                  <TableRow
+                    tabIndex={0}
+                    onClick={() => onSelectRendering(r.renderingId)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectRendering(r.renderingId);
+                      }
+                    }}
+                    className={cn(
+                      'cursor-pointer',
+                      isExpanded && 'bg-primary/10',
+                    )}
+                    data-rendering-id={r.renderingId}
+                    aria-expanded={isExpanded}
+                  >
+                    <TableCell>
+                      <RenderingNameCell
+                        renderingId={r.renderingId}
+                        renderingName={r.displayName}
+                        allRenderings={allRenderings}
+                        collisionMap={collisionMap}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {NUMBER_FORMATTER.format(r.totalUsages)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {NUMBER_FORMATTER.format(distinctPages)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">
+                      {NUMBER_FORMATTER.format(r.datasources.length)}
+                    </TableCell>
+                    <TableCell>{rarityBadge(r)}</TableCell>
+                  </TableRow>
+                  {isExpanded ? (
+                    <TableRow
+                      data-testid="rendering-inline-detail-row"
+                      className="hover:bg-transparent"
+                    >
+                      <TableCell colSpan={5} className="p-0">
+                        <RenderingInlineDetail
+                          rendering={r}
+                          atlas={atlas ?? null}
+                          forbiddenPageIds={forbiddenPageIds}
+                          onClose={() => onCollapse?.()}
+                          onNavigate={(pageId) => onNavigatePage?.(pageId)}
+                          client={client ?? null}
+                          contextId={contextId ?? null}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </Fragment>
+              );
+            })}
           </TableBody>
         </Table>
       )}

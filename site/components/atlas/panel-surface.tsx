@@ -36,6 +36,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type * as React from 'react';
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 import { useAtlasSlice } from '@/core/use-atlas-slice';
+import { useDatasourceNames } from '@/core/use-datasource-names';
 import {
   cancelScan,
   refreshAtlas,
@@ -50,11 +51,13 @@ import { PageContextCard } from '@/components/atlas/page-context-card';
 import { RenderingImpactList } from '@/components/atlas/rendering-impact-list';
 import { DatasourceImpactGroup } from '@/components/atlas/datasource-impact-group';
 import { UsageDrawer } from '@/components/atlas/usage-drawer';
+import { DatasourceUsageDrawer } from '@/components/atlas/datasource-usage-drawer';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
 import type {
   Atlas,
   AtlasState,
   ComponentRecord,
+  DatasourceUsage,
   PageStub,
   RenderingUsage,
   Skipped,
@@ -146,6 +149,12 @@ export function PanelSurface({
 
   // Drawer state.
   const [selectedRenderingId, setSelectedRenderingId] = useState<string | null>(
+    null,
+  );
+  const [selectedDatasourceId, setSelectedDatasourceId] = useState<string | null>(
+    null,
+  );
+  const [hoveredDatasourceId, setHoveredDatasourceId] = useState<string | null>(
     null,
   );
   const [skippedOpen, setSkippedOpen] = useState(false);
@@ -282,10 +291,37 @@ export function PanelSurface({
   // The visible component list is the LAST fetched result IF it matches
   // the current active page. Otherwise we render an empty list while
   // the new fetch is in flight — derived rather than effect-mutated.
-  const displayedComponents: ReadonlyArray<ComponentRecord> =
-    pageComponents && pageComponents.forPageId === activePageId
-      ? pageComponents.components
-      : [];
+  // Memoized so downstream `useMemo` dependents have stable refs.
+  const displayedComponents: ReadonlyArray<ComponentRecord> = useMemo(
+    () =>
+      pageComponents && pageComponents.forPageId === activePageId
+        ? pageComponents.components
+        : [],
+    [pageComponents, activePageId],
+  );
+
+  // S16 — true while we have an active page but the components fetch
+  // for it has not yet landed. Drives the skeleton in zone-3 lists.
+  const isPageFetchInFlight =
+    activePageId !== null &&
+    (pageComponents === null || pageComponents.forPageId !== activePageId);
+
+  // S12 — gather the unique datasource IDs visible on the current page
+  // and ask the Authoring API to resolve human-readable names for any
+  // GUID/path-shaped ones. The hook caches results process-wide so
+  // navigating between pages doesn't re-fetch.
+  const visibleDatasourceIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of displayedComponents) {
+      if (c.datasourceId) set.add(c.datasourceId);
+    }
+    return Array.from(set);
+  }, [displayedComponents]);
+  const resolvedDatasourceNames = useDatasourceNames(
+    client,
+    contextId,
+    visibleDatasourceIds,
+  );
 
   // Atlas + skipped projection.
   const atlas = visibleAtlas(state);
@@ -301,6 +337,11 @@ export function PanelSurface({
     if (!selectedRenderingId) return null;
     return renderings.get(selectedRenderingId) ?? null;
   }, [renderings, selectedRenderingId]);
+
+  const selectedDatasource: DatasourceUsage | null = useMemo(() => {
+    if (!selectedDatasourceId) return null;
+    return atlas?.datasourceIndex.get(selectedDatasourceId) ?? null;
+  }, [atlas, selectedDatasourceId]);
 
   return (
     <div
@@ -362,24 +403,24 @@ export function PanelSurface({
         />
       </div>
 
-      {/* Zone 3 — active-page rendering stack + datasource impact group */}
+      {/* Zone 3 — unified rendering tree (datasource impact nested per row, S23) */}
       <div className="zone-3 min-h-0 flex-1 overflow-y-auto">
         <RenderingImpactList
           activePageId={activePageId}
           components={displayedComponents}
           atlas={atlas}
           onSelectRendering={(rid) => setSelectedRenderingId(rid)}
-        />
-        <DatasourceImpactGroup
-          components={displayedComponents}
-          atlas={atlas}
-          onSelectRendering={(rid) => setSelectedRenderingId(rid)}
+          onSelectDatasource={(dsId) => setSelectedDatasourceId(dsId)}
+          hoveredDatasourceId={hoveredDatasourceId}
+          onHoverDatasource={setHoveredDatasourceId}
+          isLoading={isPageFetchInFlight}
+          resolvedDatasourceNames={resolvedDatasourceNames}
         />
       </div>
 
       {/* No Zone 4 — KPI rail is widget-only per architecture § 4.5.2 */}
 
-      {/* Drawer — re-uses the widget's UsageDrawer */}
+      {/* Rendering drawer — opened by RENDERINGS ON THIS PAGE rows */}
       {selectedRendering ? (
         <UsageDrawer
           open={selectedRenderingId !== null}
@@ -396,6 +437,27 @@ export function PanelSurface({
           onNavigate={(pageId) => {
             void client.mutate('pages.context', { params: { itemId: pageId } });
             setSelectedRenderingId(null);
+          }}
+        />
+      ) : null}
+
+      {/* Datasource drawer — opened by DATASOURCE IMPACT rows (S10) */}
+      {selectedDatasource ? (
+        <DatasourceUsageDrawer
+          open={selectedDatasourceId !== null}
+          datasource={selectedDatasource}
+          allRenderings={renderings}
+          forbiddenPageIds={
+            new Set(
+              skipped
+                .filter((s) => s.reason === 'forbidden')
+                .map((s) => s.pageId),
+            )
+          }
+          onClose={() => setSelectedDatasourceId(null)}
+          onNavigate={(pageId) => {
+            void client.mutate('pages.context', { params: { itemId: pageId } });
+            setSelectedDatasourceId(null);
           }}
         />
       ) : null}

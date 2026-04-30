@@ -17,14 +17,29 @@
 // only enabling the click when a hosting rendering is known.)
 
 import type * as React from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { MissingDatasourceWarning } from '@/components/atlas/missing-datasource-warning';
+import { deriveDatasourceDisplayName } from '@/lib/sdk/datasource-name';
+import { datasourceTagColor } from '@/lib/datasource-tag';
+import { PanelRowSkeleton } from '@/components/atlas/panel-row-skeleton';
 import type { Atlas, ComponentRecord } from '@/lib/sdk/types';
 
 export type DatasourceImpactGroupProps = {
   readonly components: ReadonlyArray<ComponentRecord>;
   readonly atlas: Atlas | null;
-  readonly onSelectRendering?: (renderingId: string) => void;
+  readonly onSelectDatasource?: (datasourceId: string) => void;
+  readonly hoveredDatasourceId?: string | null;
+  readonly onHoverDatasource?: (datasourceId: string | null) => void;
+  // S16 — true while the panel surface's per-page fetch is in flight.
+  readonly isLoading?: boolean;
+  // S12 — names resolved via Authoring API; preferred over local derive.
+  readonly resolvedDatasourceNames?: ReadonlyMap<string, string>;
 };
 
 type Bucket = {
@@ -32,24 +47,25 @@ type Bucket = {
   readonly displayName: string;
   readonly count: number | null;
   readonly missing: boolean;
-  readonly hostRenderingId: string | undefined;
 };
 
 function bucketize(
   components: ReadonlyArray<ComponentRecord>,
   atlas: Atlas | null,
+  resolvedNames?: ReadonlyMap<string, string>,
 ): ReadonlyArray<Bucket> {
   const seen = new Map<string, Bucket>();
   for (const c of components) {
     if (!c.datasourceId) continue;
     if (seen.has(c.datasourceId)) continue;
     const known = atlas?.datasourceIndex.get(c.datasourceId);
+    const resolved = resolvedNames?.get(c.datasourceId);
     seen.set(c.datasourceId, {
       datasourceId: c.datasourceId,
-      displayName: known?.displayName ?? c.datasourceId,
+      displayName:
+        resolved ?? known?.displayName ?? deriveDatasourceDisplayName(c.datasourceId),
       count: known ? known.pages.length : atlas ? 0 : null,
       missing: atlas ? !known : false,
-      hostRenderingId: c.renderingId,
     });
   }
   return Array.from(seen.values());
@@ -58,27 +74,71 @@ function bucketize(
 export function DatasourceImpactGroup({
   components,
   atlas,
-  onSelectRendering,
+  onSelectDatasource,
+  hoveredDatasourceId,
+  onHoverDatasource,
+  isLoading,
+  resolvedDatasourceNames,
 }: DatasourceImpactGroupProps): React.ReactElement | null {
-  const buckets = bucketize(components, atlas);
-  if (buckets.length === 0) return null;
+  const buckets = bucketize(components, atlas, resolvedDatasourceNames);
+  // Collapsed default = false (open). Mirrors RenderingImpactList — lets
+  // the editor hide the heavy datasource list when focused on renderings.
+  const [collapsed, setCollapsed] = useState(false);
+  if (buckets.length === 0) {
+    if (isLoading) {
+      return (
+        <div className="datasource-impact-group">
+          <p className="panel-section-title text-muted-foreground px-4 pt-4 pb-1 text-xs uppercase tracking-wide">
+            Datasource impact
+          </p>
+          <PanelRowSkeleton count={3} />
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
-    <div className="datasource-impact-group">
-      <p className="panel-section-title text-muted-foreground px-4 pt-4 pb-1 text-xs uppercase tracking-wide">
-        Datasource impact
-      </p>
+    <Collapsible
+      open={!collapsed}
+      onOpenChange={(next) => setCollapsed(!next)}
+      className="datasource-impact-group"
+    >
+      <CollapsibleTrigger
+        type="button"
+        data-testid="datasource-impact-group-toggle"
+        className="panel-section-title group flex w-full items-center justify-between gap-2 px-4 pt-4 pb-1 text-xs uppercase tracking-wide text-muted-foreground hover:bg-card/50 transition-colors"
+        aria-expanded={!collapsed}
+      >
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden="true"
+            className={cn(
+              'inline-block transition-transform',
+              collapsed ? '-rotate-90' : 'rotate-0',
+            )}
+          >
+            ▾
+          </span>
+          <span>Datasource impact · {buckets.length}</span>
+        </span>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
       {buckets.map((b) => {
-        const interactive = !!b.hostRenderingId && (b.count ?? 0) > 0;
+        const interactive = (b.count ?? 0) > 0 && !b.missing;
         const handle = () => {
-          if (b.hostRenderingId && onSelectRendering) {
-            onSelectRendering(b.hostRenderingId);
+          if (interactive && onSelectDatasource) {
+            onSelectDatasource(b.datasourceId);
           }
         };
+        const isAffined = hoveredDatasourceId === b.datasourceId;
+        const tag = datasourceTagColor(b.datasourceId);
         return (
           <div
             key={b.datasourceId}
             data-testid="datasource-impact-row"
+            data-datasource-id={b.datasourceId}
+            data-affined={isAffined ? 'true' : undefined}
             role={interactive ? 'button' : undefined}
             tabIndex={interactive ? 0 : -1}
             onClick={interactive ? handle : undefined}
@@ -89,12 +149,17 @@ export function DatasourceImpactGroup({
                 handle();
               }
             }}
+            onMouseEnter={() => onHoverDatasource?.(b.datasourceId)}
+            onMouseLeave={() => onHoverDatasource?.(null)}
+            onFocus={() => onHoverDatasource?.(b.datasourceId)}
+            onBlur={() => onHoverDatasource?.(null)}
             className={cn(
-              'counter-row grid grid-cols-[88px_1fr_auto] items-center gap-3 border-b border-border bg-card px-4 py-3',
+              'counter-row grid grid-cols-[88px_1fr_auto] items-center gap-3 border-b border-border bg-card px-4 py-3 transition-colors',
               interactive
                 ? 'cursor-pointer hover:bg-neutral-bg'
                 : 'cursor-default opacity-90',
               b.missing && 'counter-row--missing',
+              isAffined && 'bg-neutral-bg ring-1 ring-inset ring-primary/40',
             )}
           >
             <div className="counter-row__count flex flex-col items-start font-mono">
@@ -130,7 +195,13 @@ export function DatasourceImpactGroup({
             </div>
             <div className="counter-row__main min-w-0">
               <div className="counter-row__primary flex items-center gap-2 truncate font-medium">
-                {b.displayName}
+                <span
+                  aria-hidden="true"
+                  data-testid="datasource-tag"
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: tag }}
+                />
+                <span className="truncate">{b.displayName}</span>
               </div>
               <div className="counter-row__secondary text-muted-foreground font-mono text-xs truncate flex items-center gap-2">
                 {b.missing ? (
@@ -152,6 +223,7 @@ export function DatasourceImpactGroup({
           </div>
         );
       })}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

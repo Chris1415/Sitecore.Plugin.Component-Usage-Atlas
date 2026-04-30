@@ -33,10 +33,13 @@ describe('<AtlasEmptyState /> — T065', () => {
     ).toBeInTheDocument();
   });
 
-  it('mode="empty-tenant" renders the empty-tenant copy verbatim', () => {
+  it('mode="empty-tenant" renders the post-scan zero-result copy', () => {
     render(<AtlasEmptyState mode="empty-tenant" />);
+    expect(screen.getByText('No renderings found')).toBeInTheDocument();
     expect(
-      screen.getByText('This tenant has no published pages yet.'),
+      screen.getByText(
+        "The scan finished but didn't find any renderings on this tenant's pages.",
+      ),
     ).toBeInTheDocument();
   });
 });

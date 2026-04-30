@@ -204,9 +204,16 @@ describe('T082 — forbidden page click-through prevented in panel drawer', () =
       expect(fetchComponentsMock).toHaveBeenCalled();
     });
 
-    // Open the drawer by clicking the rendering row.
+    // S23 — clicking the rendering row expands the inline detail; the
+    // drawer is opened from the "See all pages using this rendering"
+    // affordance inside that detail panel.
     const heroRow = await waitFor(() => screen.getByText('Hero Banner'));
     fireEvent.click(heroRow.closest('[role="button"]') ?? heroRow);
+
+    const seeAll = await waitFor(() =>
+      screen.getByTestId('rendering-impact-row-detail-rendering'),
+    );
+    fireEvent.click(seeAll);
 
     // The drawer renders 3 page rows; the forbidden one carries
     // aria-disabled + reason chip.

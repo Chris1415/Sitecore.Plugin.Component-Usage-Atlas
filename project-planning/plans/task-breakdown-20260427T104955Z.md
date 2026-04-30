@@ -484,6 +484,7 @@ Tasks are atomic units. Test tasks default to test-after ordering; the QA Specia
   - **Description:** In `<PanelSurface />`, compose two `<CounterRow />` lists: (1) **Rendering stack** — one row per component on the active page (from per-page fetch). Counter shows skeleton until atlas resolves; resolves to "+N other pages" per `renderingIndex.get(renderingId).pages.length - 1`. (2) **Datasource impact** — one row per unique datasource bound on the active page; counter is "+N pages" via `datasourceIndex.get(dsId).pages.length`; missing datasources (per AC-2.5) show the warning glyph.
   - **Expected Output:** Two grouped lists with cross-tenant counters; missing datasources warned.
   - **Depends on:** T050, T051
+  - **Reshape post-smoke (S22/S23, 2026-04-29 → 2026-04-30):** the standalone "Datasource impact" list (item 2) is **no longer mounted on the panel surface**. Each rendering row is now expandable and reveals the bound datasource inline with its own cross-tenant counter and a click-through to the per-datasource drawer. `<DatasourceImpactGroup />` remains in the codebase for potential widget-side reuse but `<PanelSurface />` only renders `<RenderingImpactList onSelectDatasource={…}>`. See `docs/architecture.md` § Page Context Panel and `components/atlas/rendering-impact-list.tsx` (S23 inline detail block). PRD AC-2.4 / FR-3.5 superseded notes track this in `project-planning/PRD/prd-000.md`.
 
 - **Task ID:** T053
   - **Title:** Implement panel page-switch handler (D10, AR-5)

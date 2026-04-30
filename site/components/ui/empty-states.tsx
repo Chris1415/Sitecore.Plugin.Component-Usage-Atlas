@@ -72,8 +72,13 @@ function EmptyStates({
     error: <Button variant="link">Try again</Button>,
   };
 
+  // Treat `actions === null` (or explicit `false`) as "no actions" so callers
+  // can opt out of the variant's default button. Only fall back to the
+  // default when the prop is undefined.
   const finalActions =
-    actions || defaultActions[variant || "no-search-results"];
+    actions !== undefined
+      ? actions
+      : defaultActions[variant || "no-search-results"];
 
   return (
     <div

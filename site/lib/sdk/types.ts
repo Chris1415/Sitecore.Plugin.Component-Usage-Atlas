@@ -295,7 +295,13 @@ export type Skipped = {
 
 export type AtlasScope =
   | { readonly kind: 'all-collections' }
-  | { readonly kind: 'collection'; readonly collectionId: CollectionId };
+  | { readonly kind: 'collection'; readonly collectionId: CollectionId }
+  // S21 — Dashboard widget mounts under a specific site (the host
+  // exposes it via `client.query('site.context')`). When the widget
+  // resolves the host site, it triggers the scan with this scope so the
+  // marketer sees only their own site's renderings + datasources, not a
+  // tenant-wide aggregate.
+  | { readonly kind: 'site'; readonly siteName: string };
 
 export type AtlasTotals = {
   readonly sites: number;

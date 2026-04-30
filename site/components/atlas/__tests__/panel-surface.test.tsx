@@ -23,7 +23,7 @@
 //     Zone 3 re-paints. Status bar (Zone 1) remains static.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import {
   __resetForTest,
   setAtlasState,
@@ -327,14 +327,22 @@ describe('<PanelSurface />', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders a Datasource impact group below the rendering list', async () => {
+  it('expands a rendering row to expose a nested datasource detail (S23)', async () => {
     setAtlasState(makeState('completed'));
     render(<PanelSurface client={makeClient()} contextId={stubContextId} />);
     await waitFor(() => {
       expect(fetchComponentsMock).toHaveBeenCalled();
     });
+    // Find any rendering-impact row and toggle it open.
+    const row = await waitFor(() =>
+      screen.getAllByTestId('rendering-impact-row')[0],
+    );
+    expect(row).toBeDefined();
+    fireEvent.click(row!);
     await waitFor(() => {
-      expect(screen.getByText(/datasource impact/i)).toBeInTheDocument();
+      expect(
+        screen.getByTestId('rendering-impact-row-detail-rendering'),
+      ).toBeInTheDocument();
     });
   });
 

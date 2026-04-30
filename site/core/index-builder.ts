@@ -17,6 +17,7 @@
 // Pure: no SDK imports beyond the type module, no React, no console.
 
 import { classifyError } from '@/core/error-classifier';
+import { deriveDatasourceDisplayName } from '@/lib/sdk/datasource-name';
 import type {
   Atlas,
   ComponentRecord,
@@ -119,7 +120,7 @@ export function buildIndices(
         if (!d) {
           d = {
             datasourceId: dsId,
-            displayName: dsId, // resolved separately if at all in v1
+            displayName: deriveDatasourceDisplayName(dsId),
             isMissing: false,
             pages: [],
             renderingSet: new Set(),

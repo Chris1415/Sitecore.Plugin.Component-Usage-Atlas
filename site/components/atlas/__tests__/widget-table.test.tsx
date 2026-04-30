@@ -102,9 +102,9 @@ describe('<WidgetTable /> — T041', () => {
       />,
     );
     expect(screen.getByText('Rendering')).toBeInTheDocument();
-    expect(screen.getByText('Used on')).toBeInTheDocument();
+    expect(screen.getByText('Pages')).toBeInTheDocument();
     expect(screen.getByText('Datasources')).toBeInTheDocument();
-    expect(screen.getByText('Total')).toBeInTheDocument();
+    expect(screen.getByText('Placements')).toBeInTheDocument();
   });
 
   it('filters rows by query (case-insensitive substring on display name)', () => {
@@ -152,24 +152,21 @@ describe('<WidgetTable /> — T041', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders empty-tenant empty state when there are zero renderings and no query', () => {
-    // M2 fix from code-review-20260428T110500Z: an empty rendering
-    // index means the scan found no pages — the correct copy is
-    // "No published pages", not "Every component is unique to a page".
-    // The "no-shared" mode is reserved for a non-empty atlas where
-    // every rendering happens to be a singleton (a future feature).
+  it('renders empty-tenant empty state when there are zero renderings and scanning is done', () => {
+    // S17: empty-state copy now reads "No renderings found" — the
+    // post-scan zero-result message — once it's gated correctly behind
+    // !isScanning. During scanning the skeleton renders instead.
     render(
       <WidgetTable
         renderings={new Map()}
         query=""
         density="compact"
         searchDisabled={false}
+        isScanning={false}
         onSelectRendering={() => undefined}
       />,
     );
-    expect(
-      screen.getByText('No published pages'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('No renderings found')).toBeInTheDocument();
   });
 
   it('search input is disabled and shows the helper string when searchDisabled=true', () => {
