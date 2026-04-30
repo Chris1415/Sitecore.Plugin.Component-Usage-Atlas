@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Widget — Inline Expansion (v1)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="canvas-header">
+    <strong>Widget detail-view v1 — inline row expansion</strong>
+    <span class="muted"> · click a row to expand its pages list directly under it · click again to collapse · arrow keys navigate</span>
+  </header>
+
+  <main class="widget">
+    <!-- freshness ribbon -->
+    <div class="ribbon">
+      <span class="check">✓</span>
+      <span class="mono">31 pages · 2 sites · 21 renderings</span>
+      <span class="spacer"></span>
+      <button class="refresh">↻ Refresh atlas</button>
+    </div>
+
+    <!-- toolbar -->
+    <div class="toolbar">
+      <span class="affordance"><span class="info">ⓘ</span> Direct bindings only</span>
+      <span class="spacer"></span>
+      <span class="density">density</span>
+      <span class="seg-on">Compact</span>
+      <span class="seg">Comfortable</span>
+    </div>
+
+    <!-- search -->
+    <div class="search">
+      <span class="search-icon">🔍</span>
+      <input type="search" placeholder="Search 21 renderings…" />
+    </div>
+
+    <!-- table -->
+    <div class="table" role="grid">
+      <div class="thead" role="row">
+        <div role="columnheader">Rendering</div>
+        <div role="columnheader" class="num">Placements</div>
+        <div role="columnheader" class="num">Pages</div>
+        <div role="columnheader" class="num">Datasources</div>
+        <div role="columnheader">Rarity</div>
+        <div role="columnheader" class="caret-col"></div>
+      </div>
+
+      <!-- expanded row demo -->
+      <div class="row open" role="row" data-rid="rid-mediatext">
+        <div class="rendering">MediaText</div>
+        <div class="num strong">14</div>
+        <div class="num strong primary">9</div>
+        <div class="num strong">13</div>
+        <div><span class="badge primary">common</span></div>
+        <div class="caret-col" aria-hidden="true">▾</div>
+      </div>
+
+      <!-- expanded panel — slides in inline below the row -->
+      <div class="detail" role="region" aria-label="MediaText usage detail">
+        <div class="detail__head">
+          <div class="detail__lead">
+            <strong>MediaText</strong>
+            <span class="muted small">9 pages · 14 placements · 13 datasources</span>
+          </div>
+          <div class="detail__actions">
+            <button class="ghost">Filter pages list to MediaText</button>
+            <button class="ghost" aria-label="Collapse">Close ▴</button>
+          </div>
+        </div>
+
+        <div class="detail__split">
+          <!-- left: pages binding it -->
+          <section>
+            <h4 class="section-title">Direct rendering usage · 9 pages</h4>
+            <div class="page-list">
+              <a class="page-row">
+                <span class="page-name">Home</span>
+                <span class="page-meta mono small muted">solo-website · /</span>
+                <span class="page-tag">×3</span>
+              </a>
+              <a class="page-row">
+                <span class="page-name">Test-Pages / Media-Text</span>
+                <span class="page-meta mono small muted">solo-website · /Test-Pages/Media-Text</span>
+                <span class="page-tag">×2</span>
+              </a>
+              <a class="page-row">
+                <span class="page-name">Faq</span>
+                <span class="page-meta mono small muted">solo-website · /Faq</span>
+              </a>
+              <a class="page-row">
+                <span class="page-name">Projects</span>
+                <span class="page-meta mono small muted">solo-website · /Projects</span>
+              </a>
+              <a class="page-row">
+                <span class="page-name">Me</span>
+                <span class="page-meta mono small muted">solo-website · /Me</span>
+                <span class="page-tag">×2</span>
+              </a>
+              <a class="page-row">
+                <span class="page-name">content-sdk-next-generation-dx</span>
+                <span class="page-meta mono small muted">solo-website · /Test-Pages/content-sdk-next-generation-dx</span>
+              </a>
+            </div>
+          </section>
+
+          <!-- right: datasources bound by this rendering -->
+          <section>
+            <h4 class="section-title">Datasources · 13</h4>
+            <div class="ds-list">
+              <a class="ds-row">
+                <span class="dot" style="background:#7c3aed"></span>
+                <span>
+                  <span class="ds-name">Highlight Text</span>
+                  <span class="ds-meta mono small muted truncate">local:/Data/Highlight Text</span>
+                </span>
+                <span class="ds-tag">2 pages</span>
+              </a>
+              <a class="ds-row">
+                <span class="dot" style="background:#0891b2"></span>
+                <span>
+                  <span class="ds-name">Media Text</span>
+                  <span class="ds-meta mono small muted truncate">local:/Data/MediaText</span>
+                </span>
+                <span class="ds-tag">9 pages</span>
+              </a>
+              <a class="ds-row">
+                <span class="dot" style="background:#dc2626"></span>
+                <span>
+                  <span class="ds-name">Brand List</span>
+                  <span class="ds-meta mono small muted truncate">1db01d13-2526-4837-ab03-89180e76769e</span>
+                </span>
+                <span class="ds-tag">1 page</span>
+              </a>
+              <a class="ds-row muted">+ 10 more datasources — click to expand</a>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- collapsed rows -->
+      <div class="row" role="row"><div class="rendering">Container</div><div class="num">11</div><div class="num primary">11</div><div class="num">0</div><div><span class="badge primary">common</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">HeroBanner</div><div class="num">10</div><div class="num primary">10</div><div class="num">7</div><div><span class="badge primary">common</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">Stats</div><div class="num">9</div><div class="num primary">8</div><div class="num">3</div><div><span class="badge primary">common</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">News List</div><div class="num">8</div><div class="num primary">8</div><div class="num">2</div><div><span class="badge primary">common</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">Image</div><div class="num">4</div><div class="num primary">4</div><div class="num">4</div><div><span class="badge subtle">rare</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">News Card</div><div class="num">3</div><div class="num primary">3</div><div class="num">3</div><div><span class="badge subtle">rare</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">EventCard</div><div class="num">1</div><div class="num primary">1</div><div class="num">1</div><div><span class="badge warn">unique</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+      <div class="row" role="row"><div class="rendering">HighlightTeaser</div><div class="num">3</div><div class="num primary">3</div><div class="num">3</div><div><span class="badge subtle">rare</span></div><div class="caret-col" aria-hidden="true">▸</div></div>
+    </div>
+
+    <!-- KPI rail at bottom (existing pattern) -->
+    <div class="rail">
+      <div class="rail__cell"><span class="rail__num">21</span><span class="rail__lbl">total renderings</span></div>
+      <div class="rail__cell"><span class="rail__num">54</span><span class="rail__lbl">total datasources</span></div>
+      <div class="rail__cell"><span class="rail__num">31</span><span class="rail__lbl">pages scanned</span></div>
+      <div class="rail__cell"><span class="rail__num">0</span><span class="rail__lbl">skipped</span></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

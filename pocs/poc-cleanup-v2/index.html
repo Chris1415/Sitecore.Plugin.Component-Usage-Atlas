@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Cleanup v2 — Heatmap Density</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="canvas-header">
+    <strong>Cleanup v2 — Heatmap density</strong>
+    <span class="muted"> · single ranked table · cell-shaded by reuse intensity · datasources collapse into a small impact rail at the bottom</span>
+  </header>
+
+  <main class="frame">
+    <div class="panel">
+      <div class="host-chrome">
+        <span class="logo" aria-hidden="true">🐶</span>
+        <strong>Dog feeding App</strong>
+        <span class="spacer"></span>
+        <button class="ghost-icon">⛶</button>
+        <button class="ghost-icon">✕</button>
+      </div>
+
+      <div class="freshness">
+        <span class="check">✓</span>
+        <span class="mono">21 renderings · 54 datasources · 28 pages</span>
+        <span class="spacer"></span>
+        <button class="link mono small">↻ Refresh</button>
+      </div>
+
+      <div class="page-context">
+        <span class="page-icon">📄</span>
+        <strong>Home</strong>
+        <span class="muted mono small truncate">/sitecore/.../Home</span>
+      </div>
+
+      <div class="affordance">
+        <span class="info-glyph">ⓘ</span> Direct bindings only
+      </div>
+
+      <!-- summary chips -->
+      <div class="summary">
+        <span class="chip primary">15 renderings</span>
+        <span class="chip subtle">7 reused</span>
+        <span class="chip ghost">8 unique</span>
+        <span class="chip warn">3 missing</span>
+      </div>
+
+      <!-- HEATMAP TABLE -->
+      <div class="heat">
+        <p class="section-title">Renderings on this page <span class="muted small">— ranked by cross-tenant reach</span></p>
+        <table class="heat-table">
+          <colgroup>
+            <col style="width:46px"><col style="width:auto"><col style="width:60px">
+          </colgroup>
+          <thead>
+            <tr><th>×N</th><th>Rendering · datasource</th><th class="num">reach</th></tr>
+          </thead>
+          <tbody>
+            <tr class="reach-9"><td><span class="x">×1</span></td><td><span class="rname">HeroBanner</span><span class="dot" style="background:#7c3aed"></span><span class="ds mono small">Home Content Top Banner</span></td><td class="num">9</td></tr>
+            <tr class="reach-10"><td><span class="x">×2</span></td><td><span class="rname">Container</span><span class="muted small">— no datasource</span></td><td class="num">10</td></tr>
+            <tr class="reach-9"><td><span class="x">×1</span></td><td><span class="rname">HeroBanner</span><span class="dot" style="background:#0891b2"></span><span class="ds mono small">Home Content Closing Banner</span></td><td class="num">9</td></tr>
+            <tr class="reach-8"><td><span class="x">×1</span></td><td><span class="rname">Stats</span><span class="dot" style="background:#9333ea"></span><span class="ds mono small">Brand List</span></td><td class="num">8</td></tr>
+            <tr class="reach-2"><td><span class="x">×3</span></td><td><span class="rname">HighlightTeaser</span><span class="dot" style="background:#dc2626"></span><span class="ds mono small">Unnamed item</span></td><td class="num">2</td></tr>
+            <tr class="reach-2"><td><span class="x">×1</span></td><td><span class="rname">Text</span><span class="dot" style="background:#65a30d"></span><span class="ds mono small">Highlight Text</span></td><td class="num">2</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">Brand List</span><span class="dot" style="background:#dc2626"></span><span class="ds mono small">Unnamed item</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">News Card</span><span class="dot" style="background:#0891b2"></span><span class="ds mono small">Home Top News</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">News List</span><span class="muted small">— no datasource</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">EventCard</span><span class="dot" style="background:#65a30d"></span><span class="ds mono small">Event To Promote</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">Product List</span><span class="muted small">— no datasource</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">Testimonial List</span><span class="muted small">— no datasource</span></td><td class="num">0</td></tr>
+            <tr class="reach-0"><td><span class="x">×1</span></td><td><span class="rname">Signup</span><span class="muted small">— no datasource</span></td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Datasource impact rail -->
+      <div class="ds-rail">
+        <p class="section-title">Datasource impact</p>
+        <div class="ds-rail__list">
+          <span class="ds-pill"><span class="dot" style="background:#7c3aed"></span>Home Top Banner <em>1</em></span>
+          <span class="ds-pill"><span class="dot" style="background:#0891b2"></span>Closing Banner <em>1</em></span>
+          <span class="ds-pill"><span class="dot" style="background:#9333ea"></span>Brand List <em>1</em></span>
+          <span class="ds-pill"><span class="dot" style="background:#65a30d"></span>Highlight Text <em>2</em></span>
+          <span class="ds-pill"><span class="dot" style="background:#65a30d"></span>Event To Promote <em>1</em></span>
+          <span class="ds-pill warn"><span class="dot" style="background:#dc2626"></span>Unnamed item ×3 <em>1</em></span>
+          <span class="ds-pill ghost">+ 8 more</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

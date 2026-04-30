@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Usage Atlas — POC v3 "Editor's Whisper"</title>
+
+  <!--
+    Blok theme stylesheet.
+    Preferred per .agent/skills/sitecore/blok/theming.md: pull tokens from registry.
+    Tried: https://blok.sitecore.com/r/theme.css (canonical registry URL form).
+    Self-contained file:// clickdummy cannot rely on network. Fallback: raw token
+    block in styles.css (Nova preset values, snapshot date 2026-04-27).
+    See styles.css :root for token source attribution.
+  -->
+  <link rel="stylesheet" href="https://blok.sitecore.com/r/theme.css" media="all" onerror="this.media='not all'" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- Top bar (POC chrome — labels what we are looking at)         -->
+  <!-- ============================================================ -->
+  <header class="poc-bar" role="banner">
+    <div class="poc-bar__inner">
+      <span class="poc-bar__brand">
+        <span class="poc-bar__dot" aria-hidden="true"></span>
+        Component Usage Atlas
+        <span class="poc-bar__sub">POC v3 — Editor's Whisper</span>
+      </span>
+      <div class="poc-bar__actions">
+        <button id="theme-toggle" class="poc-bar__btn" type="button" aria-pressed="false" aria-label="Toggle dark mode">
+          <span class="poc-bar__btn-glyph" aria-hidden="true">◐</span>
+          <span class="poc-bar__btn-label">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- Stage holds all 6 screens; only one is .is-active at a time  -->
+  <!-- ============================================================ -->
+  <main class="stage" id="stage">
+
+    <!-- =====================================================
+         SCREEN 1 — Widget · Initial scan (loading narration)
+         ===================================================== -->
+    <section class="screen" data-screen="1" data-surface="widget" id="screen-1">
+      <div class="surface surface--widget">
+        <div class="widget-frame">
+          <div class="widget-frame__chrome">
+            <span class="widget-frame__title">Component Usage Atlas</span>
+            <span class="widget-frame__hint">Dashboard widget · xmc:dashboardblocks</span>
+          </div>
+
+          <div class="widget-body widget-body--loading">
+            <div class="loading-block" role="status" aria-live="polite" aria-atomic="true">
+              <p class="loading-line" id="loading-line">Reading sites&hellip;</p>
+              <div class="loading-track" aria-hidden="true">
+                <div class="loading-track__fill" id="loading-fill" style="width: 18%"></div>
+              </div>
+              <a href="#" class="loading-stop" id="loading-stop">Stop</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SCREEN 2 — Widget · Scan complete (cards)
+         ===================================================== -->
+    <section class="screen" data-screen="2" data-surface="widget" id="screen-2">
+      <div class="surface surface--widget">
+        <div class="widget-frame">
+          <div class="widget-frame__chrome">
+            <span class="widget-frame__title">Component Usage Atlas</span>
+            <span class="widget-frame__hint">Dashboard widget · xmc:dashboardblocks</span>
+          </div>
+
+          <div class="widget-body">
+            <header class="hero">
+              <h1 class="hero__heading">What component are you looking for?</h1>
+              <div class="hero__search">
+                <span class="hero__search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="text"
+                  class="hero__search-input"
+                  placeholder="Search by name, e.g. HeroV2 or Promo Banner."
+                  aria-label="Search components"
+                />
+              </div>
+              <p class="hero__scope">
+                Across
+                <button class="hero__scope-link" type="button" aria-haspopup="listbox">all collections <span class="hero__scope-caret" aria-hidden="true">▾</span></button>.
+                Last scanned at 14:32. <button class="hero__scope-link hero__scope-link--primary" type="button">Refresh atlas</button>.
+              </p>
+              <p class="hero__scope hero__scope--quiet">
+                <a href="#" class="hero__skipped" id="open-skipped-1">3 pages were skipped — see why</a>.
+              </p>
+            </header>
+
+            <div class="rail" id="result-rail-2"></div>
+
+            <footer class="hero-foot">
+              <p>Showing <span class="badge badge--primary badge--inline">10</span> of <span class="badge badge--primary badge--inline">10</span> renderings.</p>
+              <button class="info-affordance" type="button" aria-describedby="info-tip-2">
+                <span class="info-affordance__glyph" aria-hidden="true">ⓘ</span>
+                Direct bindings only.
+              </button>
+              <span id="info-tip-2" class="sr-only">
+                v1 counts only datasources bound directly via the rendering's Datasource property.
+                Inherited datasources, personalization, A/B variants, and parameter-token
+                datasources are not counted in v1.
+              </span>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SCREEN 3 — Widget · Card expanded (drawer open)
+         ===================================================== -->
+    <section class="screen" data-screen="3" data-surface="widget" id="screen-3">
+      <div class="surface surface--widget surface--with-drawer">
+        <div class="widget-frame">
+          <div class="widget-frame__chrome">
+            <span class="widget-frame__title">Component Usage Atlas</span>
+            <span class="widget-frame__hint">Dashboard widget · drawer open</span>
+          </div>
+
+          <div class="widget-body">
+            <header class="hero">
+              <h1 class="hero__heading hero__heading--small">What component are you looking for?</h1>
+              <div class="hero__search">
+                <span class="hero__search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="text"
+                  class="hero__search-input"
+                  value="HeroV2"
+                  aria-label="Search components"
+                />
+              </div>
+              <p class="hero__scope">
+                Across <button class="hero__scope-link" type="button">all collections</button>. Last scanned at 14:32.
+              </p>
+            </header>
+
+            <div class="rail" id="result-rail-3"></div>
+          </div>
+        </div>
+
+        <!-- Shared <UsageDrawer /> -->
+        <aside class="drawer" role="dialog" aria-modal="false" aria-labelledby="drawer-heading-3">
+          <header class="drawer__head">
+            <h2 class="drawer__heading" id="drawer-heading-3">
+              <strong>HeroV2</strong> appears on <span class="badge badge--primary badge--inline">12</span> pages.
+            </h2>
+            <button class="drawer__close" type="button" aria-label="Close drawer">×</button>
+          </header>
+
+          <div class="drawer__body">
+            <details class="collapsible" open>
+              <summary class="collapsible__summary">
+                <span class="collapsible__chevron" aria-hidden="true">▾</span>
+                Pages that place this rendering directly
+                <span class="badge badge--muted badge--inline">7</span>
+              </summary>
+              <ul class="page-list" id="drawer-direct-3"></ul>
+            </details>
+
+            <details class="collapsible" open>
+              <summary class="collapsible__summary">
+                <span class="collapsible__chevron" aria-hidden="true">▾</span>
+                Pages that also bind one of its datasources
+                <span class="badge badge--muted badge--inline">5</span>
+              </summary>
+              <ul class="page-list" id="drawer-via-3"></ul>
+            </details>
+
+            <p class="drawer__foot">
+              <button class="info-affordance" type="button">
+                <span class="info-affordance__glyph" aria-hidden="true">ⓘ</span>
+                Direct bindings only.
+              </button>
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SCREEN 4 — Page Context Panel · current page
+         ===================================================== -->
+    <section class="screen" data-screen="4" data-surface="panel" id="screen-4">
+      <div class="surface surface--panel">
+        <div class="panel-frame">
+          <div class="panel-frame__chrome">
+            <span class="panel-frame__title">Component Usage Atlas</span>
+            <span class="panel-frame__hint">Page context · xmc:pages:context-panel</span>
+          </div>
+
+          <div class="panel-body" id="panel-body-4">
+            <header class="panel-summary">
+              <p class="panel-summary__lede">
+                This page renders <span class="badge badge--primary badge--inline">5</span> components.
+                <strong>Two</strong> of them are widely shared; <strong>three</strong> are unique to this page.
+              </p>
+              <p class="panel-summary__meta">Last scanned 14:32. Counters update once the scan finishes.</p>
+            </header>
+
+            <ul class="panel-renderings" id="panel-renderings-4"></ul>
+
+            <div class="panel-divider" role="separator" aria-orientation="horizontal">
+              <span class="panel-divider__label">Datasource impact</span>
+            </div>
+
+            <ul class="panel-datasources" id="panel-datasources-4"></ul>
+
+            <p class="panel-foot">
+              <button class="info-affordance" type="button">
+                <span class="info-affordance__glyph" aria-hidden="true">ⓘ</span>
+                Direct bindings only.
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SCREEN 5 — Panel · counter pill click → drawer open
+         ===================================================== -->
+    <section class="screen" data-screen="5" data-surface="panel" id="screen-5">
+      <div class="surface surface--panel surface--with-drawer">
+        <div class="panel-frame">
+          <div class="panel-frame__chrome">
+            <span class="panel-frame__title">Component Usage Atlas</span>
+            <span class="panel-frame__hint">Page context · drawer open</span>
+          </div>
+
+          <div class="panel-body" id="panel-body-5">
+            <header class="panel-summary">
+              <p class="panel-summary__lede">
+                This page renders <span class="badge badge--primary badge--inline">5</span> components.
+                <strong>Two</strong> of them are widely shared; <strong>three</strong> are unique to this page.
+              </p>
+              <p class="panel-summary__meta">Last scanned 14:32.</p>
+            </header>
+
+            <ul class="panel-renderings" id="panel-renderings-5"></ul>
+          </div>
+        </div>
+
+        <aside class="drawer drawer--panel" role="dialog" aria-modal="false" aria-labelledby="drawer-heading-5">
+          <header class="drawer__head">
+            <h2 class="drawer__heading" id="drawer-heading-5">
+              <strong>HeroV2</strong> is also on <span class="badge badge--primary badge--inline">12</span> other pages.
+            </h2>
+            <button class="drawer__close" type="button" aria-label="Close drawer">×</button>
+          </header>
+
+          <div class="drawer__body">
+            <details class="collapsible" open>
+              <summary class="collapsible__summary">
+                <span class="collapsible__chevron" aria-hidden="true">▾</span>
+                Pages that place this rendering directly
+                <span class="badge badge--muted badge--inline">7</span>
+              </summary>
+              <ul class="page-list" id="drawer-direct-5"></ul>
+            </details>
+
+            <details class="collapsible" open>
+              <summary class="collapsible__summary">
+                <span class="collapsible__chevron" aria-hidden="true">▾</span>
+                Pages that also bind one of its datasources
+                <span class="badge badge--muted badge--inline">5</span>
+              </summary>
+              <ul class="page-list" id="drawer-via-5"></ul>
+            </details>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SCREEN 6 — Skipped pages sub-drawer
+         ===================================================== -->
+    <section class="screen" data-screen="6" data-surface="widget" id="screen-6">
+      <div class="surface surface--widget surface--with-drawer">
+        <div class="widget-frame">
+          <div class="widget-frame__chrome">
+            <span class="widget-frame__title">Component Usage Atlas</span>
+            <span class="widget-frame__hint">Dashboard widget · skipped pages</span>
+          </div>
+
+          <div class="widget-body widget-body--dim">
+            <header class="hero">
+              <h1 class="hero__heading hero__heading--small">What component are you looking for?</h1>
+              <div class="hero__search">
+                <span class="hero__search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="text"
+                  class="hero__search-input"
+                  placeholder="Search by name, e.g. HeroV2 or Promo Banner."
+                  aria-label="Search components"
+                />
+              </div>
+              <p class="hero__scope">
+                Across <button class="hero__scope-link" type="button">all collections</button>. Last scanned at 14:32.
+              </p>
+            </header>
+          </div>
+        </div>
+
+        <aside class="drawer drawer--skipped" role="dialog" aria-modal="false" aria-labelledby="drawer-heading-6">
+          <header class="drawer__head">
+            <h2 class="drawer__heading" id="drawer-heading-6">
+              <strong>3</strong> pages were skipped during the scan.
+            </h2>
+            <button class="drawer__close" type="button" aria-label="Close drawer">×</button>
+          </header>
+
+          <div class="drawer__body">
+            <p class="drawer__lede">
+              The atlas excludes these from counts. Each row carries a typed reason — never color alone.
+            </p>
+
+            <ul class="skipped-list" id="skipped-list-6"></ul>
+
+            <p class="drawer__foot">
+              <button class="info-affordance" type="button">
+                <span class="info-affordance__glyph" aria-hidden="true">ⓘ</span>
+                Counts shown elsewhere are upper bounds for what you can see.
+              </button>
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- Floating screen navigator (POC chrome only)                  -->
+  <!-- ============================================================ -->
+  <nav class="navigator" role="navigation" aria-label="Screen navigator">
+    <span class="navigator__label">Screen</span>
+    <button class="navigator__btn" data-goto="1" type="button">1 · Loading</button>
+    <button class="navigator__btn" data-goto="2" type="button">2 · Results</button>
+    <button class="navigator__btn" data-goto="3" type="button">3 · Drawer</button>
+    <button class="navigator__btn" data-goto="4" type="button">4 · Panel</button>
+    <button class="navigator__btn" data-goto="5" type="button">5 · Pill → drawer</button>
+    <button class="navigator__btn" data-goto="6" type="button">6 · Skipped</button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

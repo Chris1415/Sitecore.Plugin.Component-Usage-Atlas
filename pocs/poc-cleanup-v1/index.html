@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Cleanup v1 — Tiered Groups</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="canvas-header">
+    <div>
+      <strong>Cleanup v1 — Tiered Groups</strong>
+      <span class="muted"> · collapsible by impact tier · default: only Hot expanded · datasource impact in own tier</span>
+    </div>
+  </header>
+
+  <main class="frame">
+    <div class="panel">
+      <!-- host chrome (kept identical to current) -->
+      <div class="host-chrome">
+        <div class="row gap">
+          <span class="logo" aria-hidden="true">🐶</span>
+          <strong>Dog feeding App</strong>
+          <span class="spacer"></span>
+          <button class="ghost-icon" aria-label="Expand">⛶</button>
+          <button class="ghost-icon" aria-label="Close">✕</button>
+        </div>
+      </div>
+
+      <!-- tenant freshness summary -->
+      <div class="freshness">
+        <span class="check" aria-hidden="true">✓</span>
+        <span class="mono small">21 renderings · 54 datasources · 28 pages</span>
+        <span class="spacer"></span>
+        <button class="link mono small">↻ Refresh</button>
+      </div>
+
+      <!-- page context -->
+      <div class="page-context">
+        <span class="page-icon" aria-hidden="true">📄</span>
+        <strong>Home</strong>
+        <span class="muted mono small truncate">/sitecore/content/solo/solo-website/Home</span>
+      </div>
+
+      <div class="affordance">
+        <span class="info-glyph">ⓘ</span> Direct bindings only
+      </div>
+
+      <!-- search/filter strip -->
+      <div class="filter-strip">
+        <input type="search" placeholder="Filter renderings on this page…" />
+        <span class="chip on">all</span>
+        <span class="chip">reused</span>
+        <span class="chip">unique</span>
+      </div>
+
+      <!-- TIER 1: Hot (≥5 other pages) — expanded by default -->
+      <details class="tier" open>
+        <summary>
+          <span class="caret" aria-hidden="true">▾</span>
+          <span class="tier-label">Hot</span>
+          <span class="muted small">≥5 other pages</span>
+          <span class="spacer"></span>
+          <span class="tier-badge primary">5 renderings · 47 cross-tenant uses</span>
+        </summary>
+        <ol class="rows">
+          <li class="row-card">
+            <div class="row-num primary">9</div>
+            <div class="row-main">
+              <div class="row-title">HeroBanner</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#7c3aed"></span> Home Content Top Banner
+              </div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="row-card">
+            <div class="row-num primary">10</div>
+            <div class="row-main">
+              <div class="row-title">Container</div>
+              <div class="row-sub muted small">no datasource</div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="row-card">
+            <div class="row-num primary">9</div>
+            <div class="row-main">
+              <div class="row-title">HeroBanner</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#0891b2"></span> Home Content Closing Banner
+              </div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="row-card">
+            <div class="row-num primary">8</div>
+            <div class="row-main">
+              <div class="row-title">Stats</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#9333ea"></span> Brand List
+              </div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="row-card">
+            <div class="row-num primary">10</div>
+            <div class="row-main">
+              <div class="row-title">Container</div>
+              <div class="row-sub muted small">no datasource</div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+        </ol>
+      </details>
+
+      <!-- TIER 2: Some (1-4 other pages) — collapsed by default -->
+      <details class="tier">
+        <summary>
+          <span class="caret" aria-hidden="true">▸</span>
+          <span class="tier-label">Some</span>
+          <span class="muted small">1–4 other pages</span>
+          <span class="spacer"></span>
+          <span class="tier-badge subtle">4 renderings · 8 uses</span>
+        </summary>
+        <ol class="rows">
+          <li class="row-card subdued">
+            <div class="row-num subtle">2</div>
+            <div class="row-main">
+              <div class="row-title">Text</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#65a30d"></span> Highlight Text
+              </div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="row-card subdued">
+            <div class="row-num subtle">2</div>
+            <div class="row-main">
+              <div class="row-title">HighlightTeaser ×3</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#dc2626"></span> 3 unnamed datasources · open to compare
+              </div>
+            </div>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+        </ol>
+      </details>
+
+      <!-- TIER 3: Unique (0 other pages) — collapsed -->
+      <details class="tier">
+        <summary>
+          <span class="caret" aria-hidden="true">▸</span>
+          <span class="tier-label">Unique</span>
+          <span class="muted small">0 other pages — only on this page</span>
+          <span class="spacer"></span>
+          <span class="tier-badge ghost">8 renderings</span>
+        </summary>
+        <ol class="rows">
+          <li class="row-card subdued">
+            <div class="row-num ghost">0</div>
+            <div class="row-main">
+              <div class="row-title">Brand List</div>
+              <div class="row-sub mono small">
+                <span class="dot" style="background:#dc2626"></span> Unnamed item
+              </div>
+            </div>
+          </li>
+          <li class="row-card subdued">
+            <div class="row-num ghost">0</div>
+            <div class="row-main">
+              <div class="row-title">News Card · News List · EventCard · Product List · Testimonial List · Signup</div>
+              <div class="row-sub muted small">6 unique renderings · click to expand individually</div>
+            </div>
+          </li>
+        </ol>
+      </details>
+
+      <!-- DATASOURCE IMPACT — separate tier with cross-tenant intensity -->
+      <details class="tier ds">
+        <summary>
+          <span class="caret" aria-hidden="true">▾</span>
+          <span class="tier-label">Datasource impact</span>
+          <span class="muted small">cross-tenant content reuse</span>
+          <span class="spacer"></span>
+          <span class="tier-badge subtle">14 datasources</span>
+        </summary>
+        <ol class="ds-rows">
+          <li class="ds-card">
+            <span class="dot" style="background:#7c3aed"></span>
+            <div class="row-main">
+              <div class="row-title">Home Content Top Banner</div>
+              <div class="row-sub mono small muted truncate">local:/Data/Home Content Top Banner</div>
+            </div>
+            <span class="impact-bar" aria-hidden="true"><span style="width:8%"></span></span>
+            <span class="impact-num">1</span>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="ds-card">
+            <span class="dot" style="background:#2563eb"></span>
+            <div class="row-main">
+              <div class="row-title">Brand List</div>
+              <div class="row-sub mono small muted truncate">1db01d13-2526-4837-ab03-89180e76769e</div>
+            </div>
+            <span class="impact-bar" aria-hidden="true"><span style="width:8%"></span></span>
+            <span class="impact-num">1</span>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="ds-card">
+            <span class="dot" style="background:#0891b2"></span>
+            <div class="row-main">
+              <div class="row-title">Home Content Closing Banner</div>
+              <div class="row-sub mono small muted truncate">local:/Data/Home Content Closing Banner</div>
+            </div>
+            <span class="impact-bar" aria-hidden="true"><span style="width:8%"></span></span>
+            <span class="impact-num">1</span>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+          <li class="ds-card">
+            <span class="dot" style="background:#65a30d"></span>
+            <div class="row-main">
+              <div class="row-title">Highlight Text</div>
+              <div class="row-sub mono small muted truncate">local:/Data/Highlight Text</div>
+            </div>
+            <span class="impact-bar" aria-hidden="true"><span style="width:18%"></span></span>
+            <span class="impact-num">2</span>
+            <span class="chev" aria-hidden="true">→</span>
+          </li>
+        </ol>
+      </details>
+    </div>
+  </main>
+</body>
+</html>

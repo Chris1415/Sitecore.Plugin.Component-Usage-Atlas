@@ -1,0 +1,199 @@
+{
+  "schema_version": 4,
+  "run_id": "20260427T104955Z",
+  "created_at": "2026-04-27T10:49:55Z",
+  "updated_at": "2026-04-28T13:50:00Z",
+  "product_slug": "component-usage-atlas",
+  "product_root": "products/component-usage-atlas",
+  "status": "shipped_with_caveats",
+  "prd_input_mode": "prompt_only",
+  "platform_target": "marketplace",
+  "task_breakdown_style": "tdd",
+  "ui_design": {
+    "proposal_count": 3,
+    "divergence": "divergent",
+    "variant_paths": [
+      "products/component-usage-atlas/project-planning/ui-design/ui-design-20260427T104955Z-v1.md",
+      "products/component-usage-atlas/project-planning/ui-design/ui-design-20260427T104955Z-v2.md",
+      "products/component-usage-atlas/project-planning/ui-design/ui-design-20260427T104955Z-v3.md"
+    ],
+    "selected_variant_path": "products/component-usage-atlas/project-planning/ui-design/ui-design-20260427T104955Z-v2.md",
+    "selected_variant_name": "v2 — Console Operator",
+    "selected_poc_path": "products/component-usage-atlas/pocs/poc-v2"
+  },
+  "source": {
+    "kind": "raw_idea",
+    "values": [
+      "Component Usage Atlas — Sitecore Marketplace app, Dashboard Widget + Page Context Panel; tenant-wide live in-memory rendering & datasource usage atlas; sourced from storage/marketplace-app-ideas.md row #3"
+    ],
+    "analysis_mode": "greenfield",
+    "source_analysis_artifact": null,
+    "content_dump": null,
+    "assets_bundle": null
+  },
+  "canonical_artifacts": {
+    "brain_dump": null,
+    "prd": "products/component-usage-atlas/project-planning/PRD/prd-000.md",
+    "prd_minimal": "products/component-usage-atlas/project-planning/PRD/prd-minimal-000.md",
+    "architecture": "products/component-usage-atlas/project-planning/architecture/architecture-20260427T104955Z.md",
+    "task_breakdown": "products/component-usage-atlas/project-planning/plans/task-breakdown-20260427T104955Z.md",
+    "task_breakdown_pre_qa": "products/component-usage-atlas/project-planning/plans/task-breakdown-pre-qa-20260427T104955Z.md",
+    "qa_report": null,
+    "implementation_runbook": "products/component-usage-atlas/project-planning/plans/implementation-runbook-20260427T104955Z.md",
+    "code_review_report": "products/component-usage-atlas/project-planning/plans/code-review-20260428T110500Z.md",
+    "test_report": "products/component-usage-atlas/project-planning/plans/test-report-20260428T122500Z.md",
+    "content_model": null,
+    "content_examples": null,
+    "ship_report": "products/component-usage-atlas/project-planning/plans/ship-report-20260428T133500Z.md",
+    "friction_log": null
+  },
+  "friction_log": {
+    "path": "products/component-usage-atlas/project-planning/workflow/friction-log-20260427T104955Z.md",
+    "min_severity": "medium",
+    "enabled": true
+  },
+  "smoke_outcomes": {
+    "T092_vercel_deploy": {
+      "outcome": "pending",
+      "description": "Deploy site/ to Vercel; record production URL.",
+      "evidence": null,
+      "notes": "Requires user-supplied Vercel project access."
+    },
+    "T093_cloud_portal_registration": {
+      "outcome": "pending",
+      "description": "Register app at Sitecore Cloud Portal with deployed URL; declare xmc:dashboardblocks + xmc:pages:context-panel extension points; grant scopes xmc.agent.read + xmc.sites.read.",
+      "evidence": null,
+      "notes": "Requires Org Admin/Owner role; depends on T092."
+    },
+    "T094_real_tenant_smoke": {
+      "outcome": "pending",
+      "description": "Real-tenant install + clipped iframe screenshots vs pocs/poc-v2 on 5 axes (layout, typography, color, component anatomy, state fidelity); cancel-with-act flow; permission-denied flow; 60fps loading visual.",
+      "evidence": null,
+      "notes": "Per .agent/skills/sitecore/marketplace-sdk/host-frame-testing.md. Host URL + interactive auth user-driven. Depends on T093."
+    },
+    "T113_manual_test_plan": {
+      "outcome": "pending",
+      "description": "Editor-validated manual test plan post real-tenant install — verifies S1, S5 acceptance criteria with real editor users.",
+      "evidence": null,
+      "notes": "Depends on T094 + tenant access for representative editor cohort."
+    }
+  },
+  "stage_history": [
+    {
+      "stage": "discovery",
+      "agent": "02-product-manager",
+      "entered_at": "2026-04-27T10:30:00Z",
+      "exited_at": "2026-04-27T10:48:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "spec_ready",
+      "agent": "02-product-manager",
+      "entered_at": "2026-04-27T10:48:00Z",
+      "exited_at": "2026-04-27T10:55:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "architecture_ready",
+      "agent": "04-software-architect",
+      "entered_at": "2026-04-27T11:00:00Z",
+      "exited_at": "2026-04-27T11:30:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "ui_selected",
+      "agent": "user",
+      "entered_at": "2026-04-27T15:59:00Z",
+      "exited_at": "2026-04-27T15:59:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "Selected v2 Console Operator after side-by-side POC comparison; POCs completed in this session (v1 index.html, v2 index.html+app.js, v3 app.js)."
+    },
+    {
+      "stage": "plan_ready",
+      "agent": "06-lead-developer",
+      "entered_at": "2026-04-27T16:00:00Z",
+      "exited_at": "2026-04-27T16:05:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "qa_ready",
+      "agent": "07-qa-specialist",
+      "entered_at": "2026-04-27T16:05:00Z",
+      "exited_at": "2026-04-27T16:30:00Z",
+      "outcome": "completed",
+      "error": null
+    },
+    {
+      "stage": "implemented",
+      "agent": "08-developer",
+      "entered_at": "2026-04-27T16:35:00Z",
+      "exited_at": "2026-04-28T11:05:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "M1-M6 complete in sequential TDD. 73 of 77 tasks implemented; T092 (Vercel deploy), T093 (Cloud Portal registration), T094 (real-tenant smoke), T113 (manual test plan post-T094) explicitly deferred — require user-supplied tenant credentials and out-of-band stakeholder actions. 216 tests across 32 files; lint/typecheck/build/audit:network/audit:anti-metric all 0."
+    },
+    {
+      "stage": "code_reviewed",
+      "agent": "08-developer",
+      "entered_at": "2026-04-28T11:10:00Z",
+      "exited_at": "2026-04-28T12:25:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "1 critical + 5 major auto-fixed; 6 minor deferred to user. ADR-0013 telemetry leak (console.log of context IDs in marketplace.tsx) caught + fixed. M5 surface-tag bug for panel-initiated scans fixed. M3 requireContextId bypass + render-time throw wrapped. Final gates all 0; 216/216 tests; PASS."
+    },
+    {
+      "stage": "tested",
+      "agent": "07-qa-specialist",
+      "entered_at": "2026-04-28T12:30:00Z",
+      "exited_at": "2026-04-28T13:15:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "Phase 1 PASS-WITH-CAVEATS (host-frame WARN-deferred — host URL not user-supplied; T094 pending). 0 critical / 2 major (M_NEW1 withBackoff hardcoded surface; M_NEW2 orphan scaffold ADR-0013 leak) + 1 minor (m_NEW3 unknown virtual-row collision suffix). Phase 2 Developer fixed all 2 majors + the minor; orphan components/examples/ tree deleted; surface threading reaches withBackoff; collision suffix excludes virtual unknowns. Test count 216 → 219; all gates 0 (lint/typecheck/test/build/audit:network/audit:anti-metric/ci). Status transitions to tested_pending_smoke per Marketplace+pending-smoke gate."
+    },
+    {
+      "stage": "documented",
+      "agent": "09-doc-writer",
+      "entered_at": "2026-04-28T13:20:00Z",
+      "exited_at": "2026-04-28T13:35:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "Generated README.md (248 lines, replaced M1 stub, preserved smoke-test rule), CHANGELOG.md (13 lines, Unreleased — PRD-000 placeholder awaiting /ship), docs/architecture.md (262 lines, narrative synthesis), docs/decisions.md (70 lines, all 14 ADRs grouped by theme). Screenshot reference placeholder + T094 caveat per memory note. No CHANGELOG entries yet (no ship report)."
+    },
+    {
+      "stage": "shipped",
+      "agent": "02-product-manager",
+      "entered_at": "2026-04-28T13:35:00Z",
+      "exited_at": "2026-04-28T13:50:00Z",
+      "outcome": "completed",
+      "error": null,
+      "note": "Status forced to shipped_with_caveats by smoke_outcomes gate — 4 entries pending (T092 Vercel deploy, T093 Cloud Portal registration, T094 real-tenant smoke + clipped iframe vs poc-v2, T113 manual test plan). 64 PRD requirements delivered / 8 partial / 0 deferred-from-scope / 0 cut. ADR compliance 14/14. ~30 friction-log entries (~24 medium / 6 high / 0 critical) — promotion to /cleanup-friction queue offered separately."
+    }
+  ],
+  "implementation": {
+    "mode": "pipeline",
+    "target_directory": "site",
+    "branch_name": "prd-000",
+    "remote_url": "https://github.com/Chris1415/Sitecore.Plugin.Component-Usage-Atlas.git",
+    "status": "completed",
+    "resumed_from_stage": null,
+    "current_milestone": "M6",
+    "deferred_tasks": ["T092", "T093", "T094", "T113"]
+  },
+  "notes": [
+    "Source: storage/marketplace-app-ideas.md row #3 — Component Usage Atlas (L effort).",
+    "discovery: completed (Round 1+2 in /create-prd; full discovery, no brain-dump).",
+    "critical_review: completed (Round 1 only; user folded all call-outs into PRD revision rather than running further rounds).",
+    "ADRs introduced by /create-prd: ADR-0002..0006.",
+    "ADRs introduced by /architect: ADR-0007 (scaffold), ADR-0008 (Next.js stay), ADR-0009 (Blok UI), ADR-0010 (singleton state), ADR-0011 (branded loading), ADR-0012 (concurrency 8 + backoff), ADR-0013 (in-iframe telemetry), ADR-0014 (root notFound).",
+    "Architecture file: products/component-usage-atlas/project-planning/architecture/architecture-20260427T104955Z.md (917 lines).",
+    "Architect-time open questions OQ-A1..OQ-A4 added: pagesGetComponentsOnPage field-name verification, sitesGetAllPagesBySite pagination, nested-rendering depth — Lead Developer must confirm at scaffold time.",
+    "UI design: 3 divergent variants generated by /architect. POCs filled in 2026-04-27 (v1 index.html, v2 index.html+app.js, v3 app.js — initial /architect output had missing files). User selected v2 Console Operator after side-by-side smoke test.",
+    "Lead Developer (06) task breakdown written to products/component-usage-atlas/project-planning/plans/task-breakdown-20260427T104955Z.md on 2026-04-27. § 4c gate: PASS (all 7 subsections filled or explicitly N/A — 4c-7 is N/A — greenfield). task_breakdown_style remains standard until QA Specialist (07) enriches sections 9 + 10.",
+    "Recommended next stage: /task-breakdown step 2 — QA Specialist (07) edits the same file in place to add TDD discipline + per-task tests."
+  ]
+}

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Cleanup v3 — Tabbed Lenses</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="canvas-header">
+    <strong>Cleanup v3 — Tabbed lenses</strong>
+    <span class="muted"> · split into Components and Content tabs · each tab is its own simple list · no double-section noise</span>
+  </header>
+
+  <main class="frame">
+    <div class="panel">
+      <div class="host-chrome">
+        <span class="logo" aria-hidden="true">🐶</span>
+        <strong>Dog feeding App</strong>
+        <span class="spacer"></span>
+        <button class="ghost-icon">⛶</button>
+        <button class="ghost-icon">✕</button>
+      </div>
+
+      <div class="freshness">
+        <span class="check">✓</span>
+        <span class="mono">21 renderings · 54 datasources · 28 pages</span>
+        <span class="spacer"></span>
+        <button class="link mono small">↻ Refresh</button>
+      </div>
+
+      <div class="page-context">
+        <span class="page-icon">📄</span>
+        <strong>Home</strong>
+        <span class="muted mono small truncate">/sitecore/.../Home</span>
+      </div>
+
+      <div class="affordance">
+        <span class="info-glyph">ⓘ</span> Direct bindings only
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true">
+          <span>Components</span>
+          <span class="tab-count primary">15</span>
+        </button>
+        <button class="tab" role="tab">
+          <span>Content</span>
+          <span class="tab-count">14</span>
+        </button>
+        <button class="tab" role="tab">
+          <span class="muted">Skipped</span>
+          <span class="tab-count ghost">0</span>
+        </button>
+      </div>
+
+      <!-- segmented filter under tabs -->
+      <div class="seg">
+        <span class="seg-on">all 15</span>
+        <span class="seg-item">reused 7</span>
+        <span class="seg-item">unique 8</span>
+      </div>
+
+      <!-- COMPONENTS LIST (single, simpler, scannable) -->
+      <ol class="list">
+        <li class="row hot">
+          <span class="left">
+            <span class="bar"><span style="width:90%"></span></span>
+            <span class="name">Container <span class="x">×2</span></span>
+          </span>
+          <span class="right">
+            <span class="num">10</span>
+            <span class="lbl">other pages</span>
+          </span>
+        </li>
+        <li class="row hot">
+          <span class="left">
+            <span class="bar"><span style="width:80%"></span></span>
+            <span class="name">HeroBanner <span class="ds-tag" style="background:#7c3aed"></span></span>
+          </span>
+          <span class="right"><span class="num">9</span><span class="lbl">other pages</span></span>
+        </li>
+        <li class="row hot">
+          <span class="left">
+            <span class="bar"><span style="width:80%"></span></span>
+            <span class="name">HeroBanner <span class="ds-tag" style="background:#0891b2"></span></span>
+          </span>
+          <span class="right"><span class="num">9</span><span class="lbl">other pages</span></span>
+        </li>
+        <li class="row warm">
+          <span class="left">
+            <span class="bar"><span style="width:70%"></span></span>
+            <span class="name">Stats <span class="ds-tag" style="background:#9333ea"></span></span>
+          </span>
+          <span class="right"><span class="num">8</span><span class="lbl">other pages</span></span>
+        </li>
+        <li class="row mild">
+          <span class="left">
+            <span class="bar"><span style="width:18%"></span></span>
+            <span class="name">HighlightTeaser <span class="x">×3</span> <span class="ds-tag" style="background:#dc2626"></span></span>
+          </span>
+          <span class="right"><span class="num">2</span><span class="lbl">other pages</span></span>
+        </li>
+        <li class="row mild">
+          <span class="left">
+            <span class="bar"><span style="width:18%"></span></span>
+            <span class="name">Text <span class="ds-tag" style="background:#65a30d"></span></span>
+          </span>
+          <span class="right"><span class="num">2</span><span class="lbl">other pages</span></span>
+        </li>
+        <li class="row cold">
+          <span class="left"><span class="bar"></span><span class="name">News List · News Card · EventCard · Brand List · Product List · Testimonial List · Signup</span></span>
+          <span class="right"><span class="num">0</span><span class="lbl">unique × 7</span></span>
+        </li>
+      </ol>
+
+      <div class="footer-link">switch tabs to see datasource impact →</div>
+    </div>
+  </main>
+</body>
+</html>

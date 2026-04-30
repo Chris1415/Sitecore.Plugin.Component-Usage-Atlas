@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Widget — Master-Detail Split (v2)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="canvas-header">
+    <strong>Widget detail-view v2 — master-detail split</strong>
+    <span class="muted"> · always-visible detail pane on the right · arrow keys move selection · no modal moments</span>
+  </header>
+
+  <main class="widget">
+    <div class="ribbon">
+      <span class="check">✓</span>
+      <span class="mono">31 pages · 2 sites · 21 renderings</span>
+      <span class="spacer"></span>
+      <button class="refresh">↻ Refresh atlas</button>
+    </div>
+
+    <div class="toolbar">
+      <span class="affordance"><span class="info">ⓘ</span> Direct bindings only</span>
+      <span class="spacer"></span>
+      <span class="density">density</span>
+      <span class="seg-on">Compact</span>
+      <span class="seg">Comfortable</span>
+    </div>
+
+    <div class="split">
+      <!-- LEFT: master list -->
+      <section class="master">
+        <div class="search">
+          <span class="search-icon">🔍</span>
+          <input type="search" placeholder="Search 21 renderings…" />
+        </div>
+
+        <div class="table" role="grid">
+          <div class="thead" role="row">
+            <div role="columnheader">Rendering</div>
+            <div role="columnheader" class="num">Plac.</div>
+            <div role="columnheader" class="num">Pages</div>
+            <div role="columnheader" class="num">DS</div>
+          </div>
+
+          <div class="row selected" role="row">
+            <div class="rendering">MediaText</div>
+            <div class="num strong">14</div>
+            <div class="num strong primary">9</div>
+            <div class="num">13</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">Container</div>
+            <div class="num">11</div>
+            <div class="num primary">11</div>
+            <div class="num">0</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">HeroBanner</div>
+            <div class="num">10</div>
+            <div class="num primary">10</div>
+            <div class="num">7</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">Stats</div>
+            <div class="num">9</div>
+            <div class="num primary">8</div>
+            <div class="num">3</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">News List</div>
+            <div class="num">8</div>
+            <div class="num primary">8</div>
+            <div class="num">2</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">Image</div>
+            <div class="num">4</div>
+            <div class="num primary">4</div>
+            <div class="num">4</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">News Card</div>
+            <div class="num">3</div>
+            <div class="num primary">3</div>
+            <div class="num">3</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">HighlightTeaser</div>
+            <div class="num">3</div>
+            <div class="num primary">3</div>
+            <div class="num">3</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">Brand List</div>
+            <div class="num">2</div>
+            <div class="num primary">2</div>
+            <div class="num">1</div>
+          </div>
+          <div class="row" role="row">
+            <div class="rendering">EventCard</div>
+            <div class="num">1</div>
+            <div class="num primary">1</div>
+            <div class="num">1</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: detail pane (always visible, follows selection) -->
+      <aside class="detail">
+        <header class="detail__head">
+          <div>
+            <h2>MediaText</h2>
+            <p class="muted small">9 pages · 14 placements · 13 datasources</p>
+          </div>
+          <span class="badge primary">common</span>
+        </header>
+
+        <div class="detail__affordance">
+          <span class="info">ⓘ</span> Direct bindings only
+        </div>
+
+        <section class="block">
+          <h4 class="section-title">Direct rendering usage · 9 pages</h4>
+          <div class="page-list">
+            <a class="page-row">
+              <span class="page-name">Home</span>
+              <span class="page-meta mono small muted">solo-website · /</span>
+              <span class="page-tag">×3</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">Test-Pages / Media-Text</span>
+              <span class="page-meta mono small muted">solo-website · /Test-Pages/Media-Text</span>
+              <span class="page-tag">×2</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">Faq</span>
+              <span class="page-meta mono small muted">solo-website · /Faq</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">Projects</span>
+              <span class="page-meta mono small muted">solo-website · /Projects</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">Me</span>
+              <span class="page-meta mono small muted">solo-website · /Me</span>
+              <span class="page-tag">×2</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">content-sdk-next-generation-dx</span>
+              <span class="page-meta mono small muted">solo-website · /Test-Pages/content-sdk-next-generation-dx</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">404</span>
+              <span class="page-meta mono small muted">solo-website · /404</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">Hotspot</span>
+              <span class="page-meta mono small muted">solo-website · /Test-Pages/Hotspot</span>
+            </a>
+            <a class="page-row">
+              <span class="page-name">OISR Test</span>
+              <span class="page-meta mono small muted">solo-website · /Test-Pages/OISR-Test</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="block">
+          <h4 class="section-title">Datasources · 13</h4>
+          <div class="ds-list">
+            <a class="ds-row">
+              <span class="dot" style="background:#7c3aed"></span>
+              <span>
+                <span class="ds-name">Highlight Text</span>
+                <span class="ds-meta mono small muted truncate">local:/Data/Highlight Text</span>
+              </span>
+              <span class="ds-tag">2 pages</span>
+            </a>
+            <a class="ds-row">
+              <span class="dot" style="background:#0891b2"></span>
+              <span>
+                <span class="ds-name">Media Text</span>
+                <span class="ds-meta mono small muted truncate">local:/Data/MediaText</span>
+              </span>
+              <span class="ds-tag">9 pages</span>
+            </a>
+            <a class="ds-row">
+              <span class="dot" style="background:#dc2626"></span>
+              <span>
+                <span class="ds-name">Brand List</span>
+                <span class="ds-meta mono small muted truncate">1db01d13-2526-4837-ab03-89180e76769e</span>
+              </span>
+              <span class="ds-tag">1 page</span>
+            </a>
+            <a class="ds-row muted">+ 10 more datasources</a>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="rail">
+      <div class="rail__cell"><span class="rail__num">21</span><span class="rail__lbl">total renderings</span></div>
+      <div class="rail__cell"><span class="rail__num">54</span><span class="rail__lbl">total datasources</span></div>
+      <div class="rail__cell"><span class="rail__num">31</span><span class="rail__lbl">pages scanned</span></div>
+      <div class="rail__cell"><span class="rail__num">0</span><span class="rail__lbl">skipped</span></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
