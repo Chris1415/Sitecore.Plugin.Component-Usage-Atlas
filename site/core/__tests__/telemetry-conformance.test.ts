@@ -35,6 +35,10 @@ const ALL_KINDS: ReadonlyArray<TelemetryEventKind> = [
   'surface_mounted',
   'phase_transition',
   'rate_limit_retry',
+  // T007 / PRD-001 — export-related event kinds (ADR-0021).
+  'export_attempt',
+  'export_success',
+  'export_fail',
 ];
 
 const FORBIDDEN_PII_KEYS = [
@@ -59,6 +63,14 @@ const FIXTURES: Record<TelemetryEventKind, Record<string, unknown>> = {
   surface_mounted: {},
   phase_transition: { from: 'sites', to: 'pages' },
   rate_limit_retry: { attempt: 2, base_ms: 250 },
+  // T007 / PRD-001 — export events (ADR-0021).
+  export_attempt: { format: 'json', action: 'open', atlasSize: 12345 },
+  export_success: { format: 'csv', action: 'copy', durationMs: 17 },
+  export_fail: {
+    format: 'html',
+    action: 'save',
+    errorCode: 'sandbox_blocked_download',
+  },
 };
 
 describe('TelemetryEvent conformance', () => {

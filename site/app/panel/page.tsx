@@ -43,5 +43,11 @@ export default function PanelPage() {
     throw err;
   }
 
-  return <PanelSurface client={client} contextId={contextId} />;
+  return (
+    <PanelSurface
+      client={client}
+      contextId={contextId}
+      appContext={appContext}
+    />
+  );
 }

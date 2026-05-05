@@ -22,7 +22,33 @@ export type TelemetryEventKind =
   | 'pulse_response'
   | 'surface_mounted'
   | 'phase_transition'
-  | 'rate_limit_retry';
+  | 'rate_limit_retry'
+  // T007 — PRD-001 export-related event kinds. ADR-0021 introduced the
+  // three-action egress pattern (Save canonical-but-disabled, Open + Copy
+  // primary in this iframe sandbox); event payloads carry an
+  // `action: 'save' | 'open' | 'copy'` field plus an extended `errorCode`
+  // union for the new failure modes (popup_blocked, clipboard_blocked,
+  // browser_save_canceled). See ADR-0013 for transport (in-iframe ring
+  // buffer + console mirror only — no fetch / XHR / sendBeacon).
+  | 'export_attempt'
+  | 'export_success'
+  | 'export_fail';
+
+/**
+ * ADR-0021 errorCode union for `export_fail` events. Listed here as a
+ * named type so the surfaces / hooks consume one source of truth for
+ * the available codes. The `TelemetryEvent` index signature
+ * (`[key: string]: unknown`) does not enforce this on the event-level
+ * payload — call-sites use this type when constructing the event so
+ * the union is checked at the build boundary.
+ */
+export type ExportFailErrorCode =
+  | 'blob_construction_failed'
+  | 'sandbox_blocked_download'
+  | 'browser_save_canceled'
+  | 'popup_blocked'
+  | 'clipboard_blocked'
+  | 'unknown';
 
 export type TelemetryEvent = {
   readonly timestamp_ms: number;

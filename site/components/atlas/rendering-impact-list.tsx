@@ -63,12 +63,17 @@ function counterFor(
 ): { readonly count: number | null; readonly known: boolean } {
   if (!rendering) return { count: null, known: false };
   // Atlas resolved → "+N other pages use this" (excluding active page).
-  const total = rendering.pages.length;
-  const includesActive =
-    activePageId !== null &&
-    rendering.pages.some((p) => p.pageId === activePageId);
-  const otherPages = includesActive ? total - 1 : total;
-  return { count: otherPages, known: true };
+  // `rendering.pages` contains one entry per PLACEMENT, not per distinct
+  // page (a rendering placed 3× on the same page generates 3 entries —
+  // see `core/index-builder.ts:106` where each component pushes a row).
+  // The label is "other pages" so we must count distinct page IDs, not
+  // total placements; otherwise a heavy page (e.g. 5× Container on Home)
+  // inflates the counter by 4× per visit.
+  const distinctPageIds = new Set(rendering.pages.map((p) => p.pageId));
+  if (activePageId !== null) {
+    distinctPageIds.delete(activePageId);
+  }
+  return { count: distinctPageIds.size, known: true };
 }
 
 function datasourceLabel(

@@ -301,6 +301,15 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sonner-error: var(--destructive-background);
+    /* T003 / PRD-001 § 4c-4 token gaps: the Blok theme registry does NOT
+       publish dedicated `--shadow-popover` or `--color-sonner-success`
+       tokens (verified via `sitecore:blok-theming` skill catalog and the
+       Blok theme/registry sweep at https://blok.sitecore.com/r/sonner.json).
+       The POC at `pocs/poc-v1/poc.css:80,99` aliases both — we replicate
+       those aliases verbatim here. If Blok later publishes canonical
+       tokens, fold-back via a follow-up task at `/document` polish. */
+    --shadow-popover: var(--shadow-md);
+    --color-sonner-success: var(--success-background);
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     /* OQ-V2-1: Blok theme ships no --font-mono token — fall back to layout-provided

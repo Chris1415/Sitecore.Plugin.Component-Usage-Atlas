@@ -73,6 +73,18 @@ The app is **pull-only** by design (the Marketplace SDK does not allow apps to
 intercept publish or delete actions in Pages) and the atlas is **fully live in
 the iframe** — installed once, no infrastructure to maintain.
 
+**PRD-001 (2026-05-05) — Atlas Snapshot Export.** Each surface now hosts a
+format picker (JSON / CSV / HTML) followed by a three-action cluster: **Save**,
+**Open in new tab**, **Copy to clipboard**. Editors can take a portable
+snapshot of the atlas out of the iframe — to diff across time, share with
+stakeholders without XM Cloud access, or feed into spreadsheets / BI tools /
+refactor scripts. Save renders disabled in the current Cloud Portal iframe
+sandbox (downloads aren't yet allowed by the host); Open and Copy are
+primary, mirroring the same pattern shipped in the sibling Pageshot product.
+HTML output is print-stylesheet-ready so editors can hit Ctrl+P → Save as PDF
+for a shareable artifact in two clicks. See **CHANGELOG.md** and
+**ADR-0021** for the full architecture story.
+
 ## Tech stack
 
 - **Next.js 16.1.7** (App Router, Turbopack)
@@ -80,8 +92,9 @@ the iframe** — installed once, no infrastructure to maintain.
 - **TypeScript** (strict)
 - **Tailwind CSS v4** + **Blok** semantic-token registry (Sitecore design system)
 - **`@sitecore-marketplace-sdk/client@0.3.2`** + **`@sitecore-marketplace-sdk/xmc@0.4.1`** (pinned)
-- **Vitest 4.1.5** + **@testing-library/react** + **jsdom** (252 tests across 38 files)
-- **Mode A iframe-only** — no backend, no persistence, no external network egress
+- **Vitest 4.x** + **@testing-library/react** + **jsdom** — covering scan engine, atlas state, surface composition, drawers, format adapters (JSON / CSV / HTML), egress hooks, telemetry conformance, schema-stability, and SDK fixtures with `// source:` provenance per `40-sdk-contracts.mdc`. Run `npm run test` for the live count.
+- **Sonner** (Blok-styled toaster) — installed via shadcn registry for cross-cutting failure surfaces (per ADR-0021 toasts only fire for blob-construction failures, not per-action blocks).
+- **Mode A iframe-only** — no backend, no persistence, no external network egress.
 
 ## Getting started
 
@@ -126,14 +139,14 @@ portal.
 ### Tests, lint, build, audits
 
 ```bash
-npm run lint           # ESLint
-npm run typecheck      # tsc --noEmit
-npm run test           # Vitest, 252 passing across 38 files
-npm run build          # Next.js production build (4 static routes)
-npm run audit:network  # Grep gate — no raw fetch / XHR / sendBeacon outside SDK
-npm run audit:anti-metric
-                       # Grep gate — no forbidden vanity-KPI strings
-npm run ci             # Composite gate: lint + typecheck + test + build + both audits
+npm run lint                 # ESLint
+npm run typecheck            # tsc --noEmit
+npm run test                 # Vitest (jsdom env)
+npm run build                # Next.js production build (4 static routes)
+npm run audit:network        # Grep gate — no raw fetch / XHR / sendBeacon outside SDK
+npm run audit:anti-metric    # Grep gate — no forbidden vanity-KPI strings
+npm run check:schema-version # DoD-7 — ATLAS_EXPORT_SCHEMA_VERSION declared in exactly one file
+npm run ci                   # Composite gate: lint + typecheck + test + build + all audits
 ```
 
 ## Project structure
@@ -147,7 +160,7 @@ products/component-usage-atlas/
 │   │   ├── page.tsx               # Root → notFound() by design
 │   │   └── layout.tsx
 │   ├── components/
-│   │   ├── atlas/                 # 18 composed atlas primitives (widget-surface,
+│   │   ├── atlas/                 # Composed atlas primitives — widget-surface,
 │   │   │                          #   panel-surface, scan-status-bar,
 │   │   │                          #   counter-row/-rail, rendering-name-cell,
 │   │   │                          #   drawer-row, usage-drawer, skipped-drawer,
@@ -155,8 +168,11 @@ products/component-usage-atlas/
 │   │   │                          #   rendering-impact-list, datasource-impact-group,
 │   │   │                          #   missing-datasource-warning,
 │   │   │                          #   direct-bindings-affordance,
-│   │   │                          #   widget-table, empty-state, debug-panel)
-│   │   ├── ui/                    # Blok primitives (shadcn registry-installed)
+│   │   │                          #   widget-table, empty-state, debug-panel,
+│   │   │                          # PRD-001:
+│   │   │                          #   download-button (action cluster — Save / Open / Copy),
+│   │   │                          #   format-picker-menu, why-popover, export-toasts
+│   │   ├── ui/                    # Blok primitives (shadcn registry-installed) — incl. sonner
 │   │   ├── providers/             # MarketplaceProvider + SDK hooks
 │   │   └── theme-provider.tsx
 │   ├── core/                      # Framework-free engine modules
@@ -176,7 +192,28 @@ products/component-usage-atlas/
 │   │   ├── pages-enumerator.ts
 │   │   ├── components-fetcher.ts
 │   │   ├── site-language-resolver.ts
-│   │   └── telemetry.ts           # In-iframe ring buffer + console.info
+│   │   ├── telemetry.ts           # In-iframe ring buffer + console.info
+│   │   ├── tenant-identity.ts     # PRD-001 / ADR-0020 — requireTenantIdentity()
+│   │   └── atlas/export/          # PRD-001 — Atlas Snapshot Export module
+│   │       ├── schema-version.ts  # ADR-0019 single source of truth
+│   │       ├── surface-context.ts # ADR-0016 click-time clone shape
+│   │       ├── header-builder.ts  # Shared metadata block across formats
+│   │       ├── filename-builder.ts # FR-6 / § 9.4 slug rules
+│   │       ├── size-estimator.ts  # Tiered size hint for the format picker
+│   │       ├── build-export.ts    # Pure function — atlas → Blob (ADR-0016)
+│   │       ├── formats/
+│   │       │   ├── json.ts        # § 10.1 schema; declared key + array order
+│   │       │   ├── csv.ts         # § 10.2; RFC 4180; R4 formula-injection guard
+│   │       │   └── html.ts        # § 10.3 + inlined print stylesheet (R6 XSS-safe)
+│   │       ├── download/
+│   │       │   ├── trigger-download.ts # ADR-0017 § Primary mechanism
+│   │       │   └── detect-failure.ts   # 5 s heuristic per ADR-0017 § Detection contract
+│   │       ├── hooks/
+│   │       │   ├── use-save-export.ts  # ADR-0021 Save (disabled in current sandbox)
+│   │       │   ├── use-open-export.ts  # ADR-0021 Open via window.open
+│   │       │   └── use-copy-export.ts  # ADR-0021 Copy (writeText + ClipboardItem)
+│   │       └── telemetry/
+│   │           └── events.ts      # emitExportAttempt / Success / Fail wrappers
 │   ├── lib/
 │   │   ├── sdk/
 │   │   │   ├── client.ts          # ClientSDK init + typed query wrappers
@@ -185,8 +222,9 @@ products/component-usage-atlas/
 │   │   ├── collisions.ts          # Display-name disambiguation
 │   │   └── utils.ts
 │   ├── scripts/
-│   │   ├── audit-network.mjs      # CI guard — no raw fetch outside SDK
-│   │   └── check-antimetrics.mjs  # CI guard — no forbidden vanity-KPI strings
+│   │   ├── audit-network.mjs            # CI guard — no raw fetch outside SDK
+│   │   ├── check-antimetrics.mjs        # CI guard — no forbidden vanity-KPI strings
+│   │   └── check-schema-version-sot.mjs # CI guard — DoD-7 single-source-of-truth audit
 │   └── package.json
 ├── pocs/poc-v2/                   # Winning UI variant clickdummy (visual ground truth)
 ├── project-planning/              # PRD, ADRs, architecture, runbooks
@@ -239,9 +277,9 @@ For the full narrative, see [`docs/architecture.md`](docs/architecture.md).
 ## Decisions
 
 Every load-bearing decision is captured as an ADR in `project-planning/ADR/`.
-A curated, themed table of all 14 ADRs is in
-[`docs/decisions.md`](docs/decisions.md) — start there if you want the "why
-did we do it this way?" view.
+A curated, themed table of every ADR (PRD-000's foundational set + PRD-001's
+seven export-feature decisions) lives in [`docs/decisions.md`](docs/decisions.md)
+— start there if you want the "why did we do it this way?" view.
 
 ## Cloud Portal registration
 

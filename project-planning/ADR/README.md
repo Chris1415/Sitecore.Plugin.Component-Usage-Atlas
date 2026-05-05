@@ -20,6 +20,13 @@ This directory holds ADRs for this product workspace.
 | ADR-0012 | Scan concurrency = 8; exponential backoff with jitter; 12s per-page timeout | Accepted |
 | ADR-0013 | Telemetry stays in-iframe — `console.info` markers + in-memory ring buffer | Accepted |
 | ADR-0014 | Root route `/` returns `notFound()`; smoke-test rule | Accepted |
+| ADR-0015 | Export as v1 feature — supersedes PRD-000 OS-15 | Accepted |
+| ADR-0016 | Atlas export construction is a pure function; `surfaceContext` is a click-time clone | Accepted |
+| ADR-0017 | Iframe download mechanism + fallback hierarchy | Accepted (superseded in part by ADR-0021 on 2026-05-04 — Save mechanism preserved; F1/F2/F3 cascade replaced) |
+| ADR-0018 | No client-side PDF library in v1; HTML + browser print is the only PDF route | Accepted |
+| ADR-0019 | Atlas export schema versioning policy | Accepted |
+| ADR-0020 | Tenant identity for exports resolves via `application.context.resourceAccess[0]` | Accepted |
+| ADR-0021 | Three-action egress pattern (Save + Open + Copy) per pageshot precedent | Accepted |
 
 ## Next number
 

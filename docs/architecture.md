@@ -274,9 +274,151 @@ section (`OS-1` through `OS-16`):
 - **Mini-game during loading** — gated on Phase-2 if the "felt fast" pulse
   underperforms.
 - **Cross-tab cache sync** — each tab maintains its own scan and cache.
-- **Sort / export controls in the widget** for IA / dev personas.
+- **Sort controls in the widget** for IA / dev personas (the **export half**
+  of OS-15 was rescued by PRD-001 — see § Atlas Snapshot Export below).
 - **Active interception of publish / delete actions in Pages** — not
   feasible (Marketplace SDK does not expose these hooks).
 
 The full Phase 2 / Phase 3 candidate list is in the PRD § 5 (`OS-1` to
 `OS-16`) and § 15 (Future Opportunities).
+
+---
+
+## Atlas Snapshot Export (PRD-001 — added 2026-05-05)
+
+PRD-001 layers a **portable snapshot** capability onto the live in-memory
+atlas. Editors can take the atlas out of the iframe in three formats (JSON
+for diff-friendly machine-readable use, CSV for spreadsheet import, HTML for
+a printable / shareable artifact) without breaking any of the architectural
+posture from PRD-000 — same Mode A iframe (ADR-0002), same in-memory atlas
+(ADR-0003 unchanged: snapshots live in the editor's downloads folder, not in
+the app), no new SDK calls (the export reads the existing atlas state at
+click time per ADR-0010), no new extension points, no backend.
+
+### Module shape
+
+The export module is a leaf addition under `core/atlas/export/`. The
+construction function is **pure** by contract (ADR-0016):
+
+```
+buildExport(atlas, scope, surface, format, surfaceContext) → Blob
+```
+
+`surfaceContext` is a **click-time clone** prepared by the caller (the
+Download button on each surface) at the moment the editor selects a format —
+it captures `{ tenant, scope, languagesScanned, scanTimestamp, isPartial,
+totals, skippedPages, panelPage? }` so the in-flight construction is immune
+to React re-renders happening in parallel. AC-2.7 (mid-navigation export
+captures click-time page state) is a clean contract instead of a TOCTOU bug
+waiting to happen.
+
+The construction function delegates to one of three format adapters:
+
+- **`formats/json.ts`** — full data: every rendering with its full pages
+  array and datasources array; for the panel surface, page metadata + every
+  rendering with parameters + bound datasource + cross-tenant counters and
+  per-rendering / per-datasource cross-tenant page lists. Schema versioned
+  (`atlas_export_schema_version: 1`); declared key + array order so two
+  snapshots of an unchanged atlas diff cleanly (DoD-3 / AC-4.4).
+- **`formats/csv.ts`** — flat lite columns suitable for spreadsheet import;
+  RFC 4180 quoting; OWASP-style formula-injection guard (`'`-prefix on
+  string fields starting with `=`/`+`/`-`/`@`); UTF-8 without BOM.
+- **`formats/html.ts`** — single self-contained HTML5 document with inlined
+  CSS (no remote assets, no JavaScript, no remote fonts per AC-3.2 /
+  NFR-4.3). Embedded print stylesheet (11 pt body, repeating table headers,
+  `print-color-adjust: exact` on the partial-scan badge) so the same artifact
+  doubles as the route to PDF via the browser's print dialog (Ctrl+P → Save
+  as PDF). All interpolated strings — including attribute-context — pass
+  through `escapeHtml` for R6 XSS safety.
+
+### Three-action egress (ADR-0021 — pageshot precedent)
+
+PRD-001's original spec assumed a single "Download" button. The T001
+verification spike on 2026-05-04 confirmed the canonical browser-download
+mechanism (`Blob` + `URL.createObjectURL` + synthetic `<a download>`) is
+**silent-blocked** in both Marketplace extension points: the click handler
+fires, `a.click()` returns synchronously, no save dialog appears, no file
+lands in Downloads, no console error. The host iframe omits `allow-downloads`
+in its sandbox attribute — a known platform-level limitation, also
+documented inline in the sibling Pageshot product
+(`products/pageshot/site/next-app/components/use-open-image.ts:7-15`).
+
+The plan forked to the **pageshot three-action pattern**. Each surface now
+exposes a format picker followed by **three first-class user-visible
+actions**:
+
+- **Save** — canonical mechanism per ADR-0017 § Primary mechanism. **Renders
+  disabled in the current sandbox** with a tooltip pointing the editor at
+  Open or Copy ("Save will work once Sitecore enables it"). The hook
+  (`useSaveExport`) is fully implemented; future-proof — the moment the
+  Marketplace platform adds `allow-downloads` to the iframe sandbox, the
+  surface flips a single guard and Save begins working with no hook code
+  change.
+- **Open** — `window.open(blobUrl, '_blank', 'noopener,noreferrer')`. Opens
+  the formatted artifact in a new top-level browsing context. Status
+  taxonomy `'idle' | 'opening' | 'opened' | 'blocked'` — `'blocked'` when
+  the returned window is `null` (popup blocker / sandbox missing
+  `allow-popups`). Sticky for the session.
+- **Copy** — `navigator.clipboard.writeText(text)` for JSON and CSV;
+  `navigator.clipboard.write([new ClipboardItem({ 'text/html': ..., 'text/plain': ... })])`
+  for HTML so receivers pasting into a rich-text editor get formatted
+  markup, while plain-text targets get the raw HTML. Sticky `'denied'` on
+  rejection.
+
+The three hooks under `core/atlas/export/hooks/` mirror Pageshot's
+`useDownloadImage` / `useOpenImage` / `useCopyImage` shape — by deliberate
+convergence so the two products can later share the underlying primitives.
+The pill cluster lives in `components/atlas/download-button.tsx` (filename
+preserved for git-diff continuity; the component now exports an action
+cluster).
+
+ADR-0017 § Amendment 1 captures the spike outcome and the supersession-in-part;
+ADR-0021 documents the three-action contract end-to-end. **The cap-bearing
+implication**: the bundle delta vs PRD-000 baseline is now structurally larger
+than the 20 KB cap NFR-1.4 was sized for. Tracked for `/ship` resolution as
+either a precise re-measurement (`next-bundle-analyzer`) or an NFR-1.4
+amendment.
+
+### Telemetry
+
+Three new event kinds extend the existing in-iframe ring buffer (ADR-0013
+unchanged — no new transport):
+
+- `export_attempt` — fired when an action pill is clicked.
+- `export_success` — fired when the action's status taxonomy reaches
+  `'saved'` / `'opened'` / `'copied'`.
+- `export_fail` — fired when the action's taxonomy reaches `'blocked'` /
+  `'denied'` / `'unsupported'`, or when blob construction itself fails.
+
+Every event carries `surface` × `format` × `action` payload fields. The
+`errorCode` union widened to include `popup_blocked` (Open) and
+`clipboard_blocked` (Copy) on top of the existing
+`blob_construction_failed` / `sandbox_blocked_download` /
+`browser_save_canceled` / `unknown` codes.
+
+### What did not change
+
+- **ADR-0002** (Mode A iframe-only) holds — no backend, no Auth0 changes,
+  Open + Copy are pure client-side hooks.
+- **ADR-0003** (no persistence) holds — snapshots live in the editor's
+  downloads folder (Save) or browser tab (Open) or system clipboard (Copy),
+  not in the app's heap.
+- **ADR-0010** (atlas state singleton) holds — read-only, at click time, by
+  the surface integration component. The export module never mutates the
+  singleton.
+- **ADR-0013** (telemetry in-iframe only) holds — the new event kinds route
+  through the existing `track()` API; no new transport.
+
+### Compliance audits (CI-enforced)
+
+- **DoD-7 schema-version SoT** — `npm run check:schema-version` greps for
+  `atlas_export_schema_version` in the export module and confirms only
+  importers reference it; the literal `1 as const` lives in exactly one
+  file (`schema-version.ts`).
+- **DoD-6 anti-metric guard** — `npm run audit:anti-metric` blocks
+  three new vanity-KPI strings (`downloads/minute`, `total bytes exported`,
+  `format diversity per editor`) on top of PRD-000's existing list.
+- **`40-sdk-contracts.mdc`** — `requireTenantIdentity()` cites `.d.ts` paths
+  inline (`sdk-types.d.ts:236-240`, `shared-types.d.ts:69-79`) per the rule.
+  No new SDK calls were added, so the rest of the gate is satisfied
+  vacuously.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MarketplaceProvider } from "@/components/providers/marketplace";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* T002 — Toaster mounted once at the root layout, above the
+            MarketplaceProvider tree. Both /widget and /panel routes share
+            this layout, so a single mount covers both surfaces. Per
+            ADR-0021, toasts are reserved for cross-cutting failures
+            (e.g. blob construction) — no per-action wiring at this stage. */}
+        <Toaster />
         <MarketplaceProvider>{children}</MarketplaceProvider>
       </body>
     </html>
