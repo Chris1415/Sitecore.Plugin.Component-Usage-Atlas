@@ -73,17 +73,63 @@ The app is **pull-only** by design (the Marketplace SDK does not allow apps to
 intercept publish or delete actions in Pages) and the atlas is **fully live in
 the iframe** — installed once, no infrastructure to maintain.
 
-**PRD-001 (2026-05-05) — Atlas Snapshot Export.** Each surface now hosts a
-format picker (JSON / CSV / HTML) followed by a three-action cluster: **Save**,
-**Open in new tab**, **Copy to clipboard**. Editors can take a portable
-snapshot of the atlas out of the iframe — to diff across time, share with
-stakeholders without XM Cloud access, or feed into spreadsheets / BI tools /
-refactor scripts. Save renders disabled in the current Cloud Portal iframe
-sandbox (downloads aren't yet allowed by the host); Open and Copy are
-primary, mirroring the same pattern shipped in the sibling Pageshot product.
-HTML output is print-stylesheet-ready so editors can hit Ctrl+P → Save as PDF
-for a shareable artifact in two clicks. See **CHANGELOG.md** and
-**ADR-0021** for the full architecture story.
+## Atlas Snapshot Export (PRD-001 — 2026-05-05)
+
+Both surfaces let editors take a portable snapshot of the atlas out of the
+iframe. The action cluster is the same on each surface: a **format picker**
+followed by **Save**, **Open**, **Copy**.
+
+### Purpose
+
+- **Diff across time** — snapshot today, snapshot after a publish or refactor,
+  diff the two outputs to see what changed in the tenant's component usage.
+- **Share without XM Cloud access** — hand the HTML to stakeholders who don't
+  have a Cloud Portal seat (PMs, designers, agency partners) — or print it to
+  PDF.
+- **Feed downstream tools** — CSV into spreadsheets and BI dashboards; JSON
+  into refactor scripts, content audits, or migration tooling.
+
+The export is built **purely from the in-memory atlas** — no extra SDK calls,
+no backend, no telemetry leaving the iframe. The snapshot reflects the atlas
+exactly as the editor sees it at click time (ADR-0016 click-time clone).
+
+### Format types
+
+| Format | Best for | Notes |
+|--------|----------|-------|
+| **JSON** | Refactor scripts, diffing, machine consumers | Full data — every rendering, page list, datasource list, plus panel-surface page metadata. Schema-versioned (`atlas_export_schema_version: 1`); deterministic key + array order so two snapshots of an unchanged atlas diff cleanly. |
+| **CSV** | Spreadsheets, BI tools, quick filtering | Flat lite columns. RFC 4180 quoting. OWASP-style formula-injection guard (string fields starting with `= + - @` are prefixed with `'`). UTF-8, no BOM. |
+| **HTML** | Sharing with non-Sitecore stakeholders, PDF | Single self-contained file — inlined CSS, no remote assets, no JavaScript, no remote fonts. Dedicated print stylesheet (11 pt body, repeating table headers, partial-scan badge with `print-color-adjust: exact`). Doubles as the PDF path via the browser's "Save as PDF" print dialog (no client-side PDF library — see ADR-0018). |
+
+The format picker shows a **size hint** when the atlas is large: muted size
+text from 5–50 MB, warning glyph + "large, may take a moment" from 50 MB up.
+Below 5 MB no hint is shown.
+
+### Action cluster — Save / Open / Copy
+
+| Action | What it does | Today's behavior |
+|--------|--------------|-------------------|
+| **Save** | Writes a file to the user's Downloads folder | Rendered **disabled** in the current Marketplace iframe sandbox — the Cloud Portal host does not yet pass `allow-downloads`. Tooltip points the editor at Open or Copy ("Save will work once Sitecore enables it"). Kept in the UI as future-proof so it lights up automatically when the platform allows. |
+| **Open** | Opens the snapshot in a new browser tab via `window.open` of a Blob URL | Primary path today. Sticky `'blocked'` state if the browser blocks popups for the iframe. |
+| **Copy** | Copies the snapshot to the clipboard | Uses `navigator.clipboard.writeText` for JSON / CSV; `ClipboardItem` with `text/html + text/plain` peers for HTML so paste targets get the right flavor. Sticky `'denied'` for the session if the user rejects the clipboard permission prompt. |
+
+The three-action pattern mirrors the sibling **Pageshot** product (ADR-0021)
+— it was adopted after the T001 spike confirmed Save is silent-blocked in
+today's iframe sandbox.
+
+### Filename convention
+
+```
+atlas-<tenantSlug>-<surface>-<scope>-<ISO>.<ext>     # widget
+atlas-<tenantSlug>-panel-<pageSlug>-<ISO>.<ext>       # panel
+```
+
+Tenant slug falls back to `tenant-<last-7-of-tenantId>` when the SDK does not
+expose a tenant name (resolved via `application.context.resourceAccess[0]`,
+ADR-0020).
+
+See **CHANGELOG.md** for the full release notes and **ADR-0015 / 0016 / 0017
+/ 0018 / 0019 / 0020 / 0021** for the seven export-feature decisions.
 
 ## Tech stack
 
