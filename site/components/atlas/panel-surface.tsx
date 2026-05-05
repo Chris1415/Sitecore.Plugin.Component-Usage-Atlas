@@ -32,9 +32,12 @@
 //                   a fresh bus, do NOT re-trigger global scan
 //   unmount       → unsubscribe; abort the page-fetch bus
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type * as React from 'react';
-import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
+import type {
+  ApplicationContext,
+  ClientSDK,
+} from '@sitecore-marketplace-sdk/client';
 import { useAtlasSlice } from '@/core/use-atlas-slice';
 import { useDatasourceNames } from '@/core/use-datasource-names';
 import {
@@ -53,6 +56,38 @@ import { DatasourceImpactGroup } from '@/components/atlas/datasource-impact-grou
 import { UsageDrawer } from '@/components/atlas/usage-drawer';
 import { DatasourceUsageDrawer } from '@/components/atlas/datasource-usage-drawer';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
+import {
+  DownloadButton,
+  type CopyStatus,
+  type DownloadButtonState,
+  type ExportFormat,
+  type OpenStatus,
+  type SaveStatus,
+} from '@/components/atlas/download-button';
+import { useSaveExport } from '@/core/atlas/export/hooks/use-save-export';
+import { useOpenExport } from '@/core/atlas/export/hooks/use-open-export';
+import { useCopyExport } from '@/core/atlas/export/hooks/use-copy-export';
+import { buildExport } from '@/core/atlas/export/build-export';
+import { estimateAtlasSizeBytes } from '@/core/atlas/export/size-estimator';
+import {
+  cloneSurfaceContext,
+  type ExportPanelPage,
+  type SurfaceContext,
+} from '@/core/atlas/export/surface-context';
+import {
+  AtlasNoContextError,
+  requireTenantIdentity,
+} from '@/core/tenant-identity';
+import {
+  emitExportAttempt,
+  emitExportFail,
+  emitExportSuccess,
+} from '@/core/atlas/export/telemetry/events';
+import {
+  showExportFailureToast,
+  showExportSuccessToast,
+} from '@/components/atlas/export-toasts';
+import { getAtlasSnapshot } from '@/core/atlas-store';
 import type {
   Atlas,
   AtlasState,
@@ -66,7 +101,358 @@ import type {
 export type PanelSurfaceProps = {
   readonly client: ClientSDK;
   readonly contextId: string;
+  /**
+   * The Marketplace `application.context` payload from
+   * `<MarketplaceProvider>`. Required at runtime so the export feature can
+   * resolve the tenant identity at click time per ADR-0020.
+   */
+  readonly appContext?: ApplicationContext | null;
+  /** Per ADR-0021 — see WidgetSurfaceProps for rationale. */
+  readonly sandboxBlocksDownload?: boolean;
 };
+
+function defaultSandboxBlocksDownload(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+// --- T037 export-cluster sub-component --------------------------------
+
+const EMPTY_EXPORT_BLOB = new Blob([], { type: 'text/plain' });
+
+interface BuiltExport {
+  readonly blob: Blob;
+  readonly text: string;
+  readonly filename: string;
+  readonly format: ExportFormat;
+}
+
+interface PanelExportClusterProps {
+  readonly state: AtlasState;
+  readonly atlas: Atlas | null;
+  readonly appContext: ApplicationContext | null;
+  readonly sandboxBlocksDownload: boolean;
+  /**
+   * Live ref into the panel's per-page snapshot — read at action-click
+   * time to satisfy AC-2.7 (ADR-0016 click-time clone). Driven by the
+   * panel's `useEffect` on `pages.context` updates.
+   */
+  readonly activePanelPageRef: React.MutableRefObject<ExportPanelPage | null>;
+  readonly isPageFetchInFlight: boolean;
+}
+
+function deriveExportSurfaceState(
+  state: AtlasState,
+  atlas: Atlas | null,
+  isPageFetchInFlight: boolean,
+): DownloadButtonState {
+  if (isPageFetchInFlight) return 'disabled-panel-loading';
+  if (atlas) return 'enabled';
+  if (state.kind === 'scanning') return 'disabled-scan-in-progress-no-prior';
+  return 'disabled-no-data';
+}
+
+function PanelExportCluster({
+  state,
+  atlas,
+  appContext,
+  sandboxBlocksDownload,
+  activePanelPageRef,
+  isPageFetchInFlight,
+}: PanelExportClusterProps): React.ReactElement {
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
+  const [built, setBuilt] = useState<BuiltExport | null>(null);
+
+  const atlasSizeBytes = useMemo(
+    () => (atlas ? estimateAtlasSizeBytes(atlas) : null),
+    [atlas],
+  );
+
+  const blobForHooks = built?.blob ?? EMPTY_EXPORT_BLOB;
+  const textForHooks = built?.text ?? '';
+  const filenameForHooks = built?.filename ?? '';
+  const copyMode: 'text' | 'html' = built?.format === 'html' ? 'html' : 'text';
+
+  const { status: rawSaveStatus, save } = useSaveExport({
+    blob: blobForHooks,
+    filename: filenameForHooks,
+  });
+  const { status: rawOpenStatus, open } = useOpenExport({ blob: blobForHooks });
+  const {
+    status: rawCopyStatus,
+    deniedMessage,
+    copy,
+  } = useCopyExport({ text: textForHooks, mode: copyMode });
+
+  const surfaceTag = 'panel' as const;
+
+  // Build the export with the atlas snapshot + click-time panelPage clone.
+  // Used by handleAction (per AC-2.7 the panel re-clones on EVERY action click
+  // so mid-flight navigation does not corrupt the export). The format-pick
+  // path also uses this so the Save / Open / Copy hooks have a populated
+  // Blob before any user click.
+  const constructForAction = useCallback(
+    (
+      format: ExportFormat,
+      action: 'save' | 'open' | 'copy',
+    ): BuiltExport | null => {
+      const snapshot = getAtlasSnapshot();
+      const liveAtlas =
+        snapshot.kind === 'completed' || snapshot.kind === 'canceled'
+          ? snapshot.atlas
+          : (snapshot.kind === 'scanning' || snapshot.kind === 'error') &&
+              snapshot.priorAtlas
+            ? snapshot.priorAtlas
+            : atlas;
+      if (!liveAtlas) return null;
+
+      let tenant: ReturnType<typeof requireTenantIdentity>;
+      try {
+        tenant = requireTenantIdentity(appContext ?? null);
+      } catch (err) {
+        if (err instanceof AtlasNoContextError) {
+          emitExportFail({
+            surface: surfaceTag,
+            format,
+            action,
+            errorCode: 'unknown',
+          });
+          return null;
+        }
+        throw err;
+      }
+
+      const livePanelPage = activePanelPageRef.current;
+
+      const ctx: SurfaceContext = {
+        surface: surfaceTag,
+        tenant,
+        scope: { kind: 'all-collections' },
+        languagesScanned: livePanelPage ? [livePanelPage.language] : [],
+        scanTimestamp: new Date(liveAtlas.scannedAt).toISOString(),
+        isPartial: liveAtlas.isPartial,
+        totals: {
+          sites: liveAtlas.totals.sites,
+          pages: liveAtlas.totals.pages,
+          renderings: liveAtlas.totals.renderings,
+          datasources: liveAtlas.totals.datasources,
+        },
+        skippedPages: [],
+        ...(livePanelPage
+          ? {
+              panelPage: {
+                pageId: livePanelPage.pageId,
+                pageName: livePanelPage.pageName,
+                sitePath: livePanelPage.sitePath,
+                siteId: livePanelPage.siteId,
+                siteName: livePanelPage.siteName,
+                language: livePanelPage.language,
+              },
+            }
+          : {}),
+      };
+
+      try {
+        const result = buildExport({
+          atlas: liveAtlas,
+          surface: surfaceTag,
+          format,
+          // cloneSurfaceContext deep-clones at the click moment per AC-2.7 /
+          // ADR-0016. From this point on the construction function reads only
+          // the clone — no live singleton or React-context lookups.
+          surfaceContext: cloneSurfaceContext(ctx),
+          exportedAt: new Date().toISOString(),
+        });
+        return {
+          blob: result.blob,
+          text: '',
+          filename: result.filename,
+          format,
+        };
+      } catch {
+        emitExportFail({
+          surface: surfaceTag,
+          format,
+          action,
+          errorCode: 'blob_construction_failed',
+        });
+        showExportFailureToast({
+          errorCode: 'blob_construction_failed',
+          action,
+        });
+        return null;
+      }
+    },
+    [appContext, atlas, activePanelPageRef],
+  );
+
+  const onSelectFormat = useCallback(
+    (format: ExportFormat) => {
+      // Format-pick eager construction populates the hooks so the action
+      // pills can render their statuses. The action-click handlers re-build
+      // with a fresh click-time clone (AC-2.7).
+      const initial = constructForAction(format, 'save');
+      if (!initial) {
+        setSelectedFormat(null);
+        setBuilt(null);
+        return;
+      }
+      setSelectedFormat(format);
+      setBuilt(initial);
+      void initial.blob.text().then((body) => {
+        setBuilt((prev) =>
+          prev && prev.blob === initial.blob ? { ...prev, text: body } : prev,
+        );
+      });
+    },
+    [constructForAction],
+  );
+
+  const handleSave = useCallback(() => {
+    if (!selectedFormat) return;
+    // Re-clone at action-click time per AC-2.7 — the format-pick clone may be
+    // stale if the editor navigated pages between format selection and click.
+    const fresh = constructForAction(selectedFormat, 'save');
+    if (!fresh) return;
+    setBuilt(fresh);
+    void fresh.blob.text().then((body) => {
+      setBuilt((prev) =>
+        prev && prev.blob === fresh.blob ? { ...prev, text: body } : prev,
+      );
+    });
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'save',
+      atlasSize: atlasSizeBytes ?? undefined,
+    });
+    save();
+  }, [atlasSizeBytes, constructForAction, save, selectedFormat]);
+
+  const handleOpen = useCallback(() => {
+    if (!selectedFormat) return;
+    const fresh = constructForAction(selectedFormat, 'open');
+    if (!fresh) return;
+    setBuilt(fresh);
+    void fresh.blob.text().then((body) => {
+      setBuilt((prev) =>
+        prev && prev.blob === fresh.blob ? { ...prev, text: body } : prev,
+      );
+    });
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'open',
+      atlasSize: atlasSizeBytes ?? undefined,
+    });
+    open();
+  }, [atlasSizeBytes, constructForAction, open, selectedFormat]);
+
+  const handleCopy = useCallback(() => {
+    if (!selectedFormat) return;
+    const fresh = constructForAction(selectedFormat, 'copy');
+    if (!fresh) return;
+    setBuilt(fresh);
+    void fresh.blob.text().then((body) => {
+      setBuilt((prev) =>
+        prev && prev.blob === fresh.blob ? { ...prev, text: body } : prev,
+      );
+    });
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'copy',
+      atlasSize: atlasSizeBytes ?? undefined,
+    });
+    void copy();
+  }, [atlasSizeBytes, constructForAction, copy, selectedFormat]);
+
+  // Telemetry on hook-status transitions (mirrors the widget surface). We
+  // cannot place these inside the action callbacks because the hook flips
+  // status asynchronously after the action runs.
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawSaveStatus === 'saved') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'save' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'save',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    }
+  }, [atlas, built, rawSaveStatus, selectedFormat]);
+
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawOpenStatus === 'opened') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'open' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'open',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    } else if (rawOpenStatus === 'blocked') {
+      emitExportFail({
+        surface: surfaceTag,
+        format: selectedFormat,
+        action: 'open',
+        errorCode: 'popup_blocked',
+      });
+    }
+  }, [atlas, built, rawOpenStatus, selectedFormat]);
+
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawCopyStatus === 'copied') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'copy' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'copy',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    } else if (rawCopyStatus === 'denied') {
+      emitExportFail({
+        surface: surfaceTag,
+        format: selectedFormat,
+        action: 'copy',
+        errorCode: 'clipboard_blocked',
+      });
+    }
+  }, [atlas, built, rawCopyStatus, selectedFormat]);
+
+  const surfaceState = deriveExportSurfaceState(state, atlas, isPageFetchInFlight);
+  const saveStatus: SaveStatus = rawSaveStatus;
+  const openStatus: OpenStatus = rawOpenStatus;
+  const copyStatus: CopyStatus = rawCopyStatus;
+
+  return (
+    <DownloadButton
+      surface="panel"
+      state={surfaceState}
+      atlasSizeBytes={atlasSizeBytes}
+      onSelectFormat={onSelectFormat}
+      selectedFormat={selectedFormat}
+      saveStatus={saveStatus}
+      openStatus={openStatus}
+      copyStatus={copyStatus}
+      copyDeniedMessage={deniedMessage}
+      onSave={handleSave}
+      onOpen={handleOpen}
+      onCopy={handleCopy}
+      sandboxBlocksDownload={sandboxBlocksDownload}
+    />
+  );
+}
 
 // --- helpers ---------------------------------------------------------
 
@@ -130,13 +516,25 @@ type PagesContextSubscribeOptions = {
 export function PanelSurface({
   client,
   contextId,
+  appContext = null,
+  sandboxBlocksDownload,
 }: PanelSurfaceProps): React.ReactElement {
   const state = useAtlasSlice((s) => s);
+  const sandboxBlocked =
+    sandboxBlocksDownload ?? defaultSandboxBlocksDownload();
 
   // Active page tracked locally — pages.context onSuccess updates it.
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [activePageName, setActivePageName] = useState<string | null>(null);
   const [activePagePath, setActivePagePath] = useState<string | null>(null);
+
+  // AC-2.7 click-time clone backing — the panel mirrors its current page
+  // snapshot into a ref so the export cluster reads it at action click,
+  // independent of React render scheduling. The ref is intentionally
+  // unsynchronized with React state for export purposes — it tracks the
+  // LATEST `pages.context` onSuccess payload synchronously so click-time
+  // clones see the correct page even mid-batch.
+  const activePanelPageRef = useRef<ExportPanelPage | null>(null);
 
   // Per-page fetch result tagged with the page it was fetched FOR. We
   // derive the visible list (`displayedComponents` below) by comparing
@@ -197,6 +595,20 @@ export function PanelSurface({
             setActivePageId(id);
             setActivePageName(name);
             setActivePagePath(path);
+            // AC-2.7 — mirror the panel snapshot into the export ref
+            // SYNCHRONOUSLY so a Save/Open/Copy click that fires in the
+            // same tick as a page-switch (or before React processes the
+            // setState batch) sees the latest page identity.
+            activePanelPageRef.current = id
+              ? {
+                  pageId: id,
+                  pageName: name ?? id,
+                  sitePath: path ?? '',
+                  siteId: '',
+                  siteName: '',
+                  language: 'en',
+                }
+              : null;
           },
           onError: (err: unknown) => {
             track({
@@ -380,10 +792,21 @@ export function PanelSurface({
         )}
       </div>
 
-      {/* Zone 2 — direct-bindings affordance + page-context card */}
+      {/* Zone 2 — direct-bindings affordance + export cluster + page-context card */}
       <div className="zone-2 border-b border-border">
         <div className="flex items-center justify-between gap-3 bg-card px-4 py-2">
           <DirectBindingsAffordance />
+          {/* T037 — action cluster sits in zone-2 (panel layout has no
+              Refresh button next door — refresh lives inside PageContextCard
+              below). Inserted before the skipped-link warning per UI § 4.8. */}
+          <PanelExportCluster
+            state={state}
+            atlas={atlas}
+            appContext={appContext ?? null}
+            sandboxBlocksDownload={sandboxBlocked}
+            activePanelPageRef={activePanelPageRef}
+            isPageFetchInFlight={isPageFetchInFlight}
+          />
           {skipped.length > 0 ? (
             <button
               type="button"

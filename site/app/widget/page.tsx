@@ -53,5 +53,11 @@ export default function WidgetPage() {
     throw err;
   }
 
-  return <WidgetSurface client={client} contextId={contextId} />;
+  return (
+    <WidgetSurface
+      client={client}
+      contextId={contextId}
+      appContext={appContext}
+    />
+  );
 }

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// T075 — Anti-metric guard (DoD-4 / ADR-0013).
+// T075 + T045 — Anti-metric guard (DoD-4 / DoD-6 / ADR-0013 / ADR-0021).
 //
 // Greps the production source tree for forbidden vanity-metric strings
 // that would betray ADR-0013's "no scans/minute, no API calls served,
-// no session count as primary KPIs" mandate. Exits non-zero on a hit
-// with the offending path:line in stderr.
+// no session count as primary KPIs" mandate AND the PRD-001 DoD-6
+// extension that bans export-side vanity metrics ("downloads per
+// minute," "total bytes exported," "format diversity per editor").
+// Exits non-zero on a hit with the offending path:line in stderr.
 //
 // Run as `npm run check:antimetrics` (pre-ship) or via `npm run ci`.
 // Excludes test files (anything in `__tests__/` and any `*.test.ts*`)
@@ -24,18 +26,32 @@ const SCAN_DIRS = ['core', 'lib', 'components', 'app'];
 const SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.mjs']);
 
 const FORBIDDEN_PATTERNS = [
+  // ADR-0013 — scan-side vanity metrics (PRD-000).
   /scans?_per_minute/i,
   /scans?\s*\/\s*minute/i,
   /api_calls_served/i,
   /api\s+calls\s+served/i,
   /session_count/i,
   /session\s+count/i,
+  // ADR-0013 + DoD-6 (PRD-001) — export-side vanity metrics. The
+  // PRD shorthand calls these "downloads/minute," "total bytes
+  // exported," "format diversity per editor"; we cover both the
+  // human-readable phrase and the snake-case identifier form.
+  /downloads?_per_minute/i,
+  /downloads?\s*\/\s*minute/i,
+  /total_bytes_exported/i,
+  /total\s+bytes\s+exported/i,
+  /format_diversity_per_editor/i,
+  /format\s+diversity\s+per\s+editor/i,
+  /format_diversity/i,
 ];
 
-// A line that mentions "anti-metric", "ADR-0013", "DoD-4", "forbidden",
-// or "MUST NOT" is a disclaimer and is allowed to name a forbidden
-// string. The conformance test under `core/__tests__/` mirrors this.
-const DISCLAIMER = /anti[-_ ]?metric|ADR-?0013|DoD-?4|forbidden|disallowed|MUST NOT/i;
+// A line that mentions "anti-metric", "ADR-0013", "DoD-4", "DoD-6",
+// "forbidden", or "MUST NOT" is a disclaimer and is allowed to name a
+// forbidden string. The conformance test under `core/__tests__/` mirrors
+// this.
+const DISCLAIMER =
+  /anti[-_ ]?metric|ADR-?0013|DoD-?4|DoD-?6|forbidden|disallowed|MUST NOT|vanity/i;
 
 function* walk(dir) {
   let entries;

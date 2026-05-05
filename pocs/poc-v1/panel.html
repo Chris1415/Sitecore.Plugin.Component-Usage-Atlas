@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S4 — Panel default · Quiet Affordance (poc-v1)</title>
+  <link rel="stylesheet" href="poc.css">
+</head>
+<body>
+  <main class="poc-page">
+    <nav class="poc-page__breadcrumb">
+      <a href="index.html">← Back to index</a> · S4 — Panel default
+    </nav>
+    <div class="poc-page__caption">
+      Panel surface (~360 px wide). Download is icon-only (Blok ghost neutral,
+      size icon-sm) in zone-2's right action group, before the
+      "skipped" warning. Hover surfaces a tooltip "Download snapshot".
+    </div>
+
+    <div class="iframe-shell iframe-shell--panel" data-extension-point="xmc:pages:context-panel">
+      <div class="iframe-shell__chrome">
+        <span class="iframe-shell__dot"></span>
+        <span class="iframe-shell__dot"></span>
+        <span class="iframe-shell__dot"></span>
+        <span>Pages context panel · ~360 px</span>
+      </div>
+
+      <!-- Zone 1 — freshness summary -->
+      <div class="zone-1">
+        <div class="freshness">
+          <span class="freshness__icon" aria-hidden="true">✓</span>
+          <span class="freshness__summary" style="font-size: var(--text-xs);">
+            23 renderings · 41 datasources · 487 pages
+          </span>
+        </div>
+      </div>
+
+      <!-- Zone 2 — direct-bindings affordance + actions row + page-context-card -->
+      <div class="zone-2">
+        <div class="zone-2__row">
+          <div class="direct-bindings-affordance" aria-label="Direct bindings on this page">
+            <span class="glyph">12</span>
+            <span>direct bindings</span>
+          </div>
+          <div class="zone-2__actions">
+            <!-- DownloadButton (icon-only) — to the LEFT of skipped warning per spec § 2 layout -->
+            <div class="dropdown-anchor">
+              <a href="panel-menu-open.html"
+                 class="atlas-download-button btn btn--ghost btn--icon-sm"
+                 role="button"
+                 aria-haspopup="menu"
+                 aria-expanded="false"
+                 aria-label="Download snapshot"
+                 title="Download snapshot">
+                <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                </svg>
+              </a>
+            </div>
+
+            <button type="button" class="skipped-link" aria-label="3 pages skipped — view">
+              <span aria-hidden="true">⚠</span>
+              <span>3 skipped</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- page-context-card -->
+        <div class="page-context-card">
+          <p class="page-context-card__title">Product launch — Hero campaign</p>
+          <p class="page-context-card__path">/sitecore/content/acme/Marketing/Campaigns/Spring-Launch</p>
+        </div>
+      </div>
+
+      <!-- Zone 3 — rendering-impact-list (visual stub) -->
+      <div style="padding: 8px 16px 16px;">
+        <p style="margin: 0 0 6px; font-size: var(--text-xs); color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;">Renderings on this page</p>
+        <table class="stub-table" aria-label="Renderings on the active page">
+          <thead>
+            <tr>
+              <th>Rendering</th>
+              <th class="num">Cross-tenant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Hero Banner</td><td class="num">87</td></tr>
+            <tr><td>Three-Column Feature</td><td class="num">41</td></tr>
+            <tr><td>CTA Banner</td><td class="num">31</td></tr>
+            <tr><td>Quote Block</td><td class="num">37</td></tr>
+            <tr><td>Footer Newsletter Signup</td><td class="num">487</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="poc-footer">
+    <span>S4 — Panel default · iframe ~360 px · icon-only download</span>
+    <a href="index.html">Back to index</a>
+  </footer>
+</body>
+</html>

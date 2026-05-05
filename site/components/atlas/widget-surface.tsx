@@ -21,9 +21,12 @@
 // no-op for the scan; the surface re-attaches via useAtlasSlice and
 // renders the current state immediately.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type * as React from 'react';
-import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
+import type {
+  ApplicationContext,
+  ClientSDK,
+} from '@sitecore-marketplace-sdk/client';
 import { mdiRefresh } from '@mdi/js';
 import { useAtlasSlice } from '@/core/use-atlas-slice';
 import {
@@ -38,6 +41,37 @@ import { CounterRail } from '@/components/atlas/counter-rail';
 import { DensityToggle, type Density } from '@/components/atlas/density-toggle';
 import { WidgetTable } from '@/components/atlas/widget-table';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
+import {
+  DownloadButton,
+  type CopyStatus,
+  type DownloadButtonState,
+  type ExportFormat,
+  type OpenStatus,
+  type SaveStatus,
+} from '@/components/atlas/download-button';
+import { useSaveExport } from '@/core/atlas/export/hooks/use-save-export';
+import { useOpenExport } from '@/core/atlas/export/hooks/use-open-export';
+import { useCopyExport } from '@/core/atlas/export/hooks/use-copy-export';
+import { buildExport } from '@/core/atlas/export/build-export';
+import { estimateAtlasSizeBytes } from '@/core/atlas/export/size-estimator';
+import {
+  cloneSurfaceContext,
+  type SurfaceContext,
+} from '@/core/atlas/export/surface-context';
+import {
+  AtlasNoContextError,
+  requireTenantIdentity,
+} from '@/core/tenant-identity';
+import {
+  emitExportAttempt,
+  emitExportFail,
+  emitExportSuccess,
+} from '@/core/atlas/export/telemetry/events';
+import {
+  showExportFailureToast,
+  showExportSuccessToast,
+} from '@/components/atlas/export-toasts';
+import { getAtlasSnapshot } from '@/core/atlas-store';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/lib/icon';
 import type {
@@ -50,7 +84,37 @@ import { cn } from '@/lib/utils';
 export type WidgetSurfaceProps = {
   readonly client: ClientSDK;
   readonly contextId: string;
+  /**
+   * The Marketplace `application.context` payload from
+   * `<MarketplaceProvider>`. Required at runtime so the export feature can
+   * resolve the tenant identity at click time per ADR-0020. Optional in the
+   * type so existing call sites compile while the integration lands; in
+   * production the provider always passes it (see `app/widget/page.tsx`).
+   */
+  readonly appContext?: ApplicationContext | null;
+  /**
+   * Per ADR-0021, the Save action is rendered disabled while the Marketplace
+   * iframe sandbox blocks `allow-downloads`. The default uses a runtime probe
+   * (`window.self !== window.top`) so the same code paints correctly in both
+   * the iframed Marketplace and the standalone dev preview. Tests override
+   * the default to drive the Save-enabled branch.
+   */
+  readonly sandboxBlocksDownload?: boolean;
 };
+
+// Per § 4c-4 the Save action is disabled whenever the app runs inside an
+// iframe (the Marketplace sandbox lacks `allow-downloads`). When Sitecore
+// adds `allow-downloads`, flip the prop default to `false` — no other code
+// change required.
+function defaultSandboxBlocksDownload(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    // Cross-origin frame access throws — assume sandboxed.
+    return true;
+  }
+}
 
 // --- pure selectors / helpers ----------------------------------------
 
@@ -93,11 +157,13 @@ function FreshnessRibbon({
   totals,
   hostSiteName,
   onRefresh,
+  exportCluster,
 }: {
   state: AtlasState;
   totals: Atlas['totals'] | null;
   hostSiteName: string | null;
   onRefresh: () => void;
+  exportCluster: React.ReactElement | null;
 }): React.ReactElement {
   const isCanceled = state.kind === 'canceled';
   return (
@@ -144,6 +210,10 @@ function FreshnessRibbon({
         </span>
       </div>
       <div className="freshness__right inline-flex items-center gap-2">
+        {/* T036 — Action cluster mounted FIRST (data-out before data-mutation
+            per UI § 4.8). Refresh follows so the visual order is
+            [Format | Save | Open | Copy] [Refresh atlas]. */}
+        {exportCluster}
         <Button
           type="button"
           variant="default"
@@ -156,6 +226,307 @@ function FreshnessRibbon({
         </Button>
       </div>
     </div>
+  );
+}
+
+// --- T036 export integration -----------------------------------------
+
+// Empty-blob placeholder used when no format is selected yet. The action
+// pills are disabled in this state (cohortDisabled in <DownloadButton>) so
+// the hooks never actually fire on this blob — but the hooks still need a
+// stable Blob reference at render time per the React Rules of Hooks.
+const EMPTY_EXPORT_BLOB = new Blob([], { type: 'text/plain' });
+
+interface BuiltExport {
+  readonly blob: Blob;
+  readonly text: string;
+  readonly filename: string;
+  readonly format: ExportFormat;
+}
+
+function deriveExportSurfaceState(
+  state: AtlasState,
+  atlas: Atlas | null,
+): DownloadButtonState {
+  if (atlas) return 'enabled';
+  if (state.kind === 'scanning') return 'disabled-scan-in-progress-no-prior';
+  return 'disabled-no-data';
+}
+
+function deriveExportScopeKind(atlas: Atlas | null): 'all-collections' | 'collection' {
+  if (!atlas) return 'all-collections';
+  return atlas.scope.kind === 'collection' ? 'collection' : 'all-collections';
+}
+
+interface WidgetExportClusterProps {
+  readonly state: AtlasState;
+  readonly atlas: Atlas | null;
+  readonly appContext: ApplicationContext | null;
+  readonly sandboxBlocksDownload: boolean;
+}
+
+function WidgetExportCluster({
+  state,
+  atlas,
+  appContext,
+  sandboxBlocksDownload,
+}: WidgetExportClusterProps): React.ReactElement {
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
+  const [built, setBuilt] = useState<BuiltExport | null>(null);
+
+  // Atlas size for the format-picker tier annotation. Lazily computed so the
+  // estimator only runs when the menu actually opens (DownloadButton calls
+  // sizeAnnotationTier on each render, but estimateAtlasSizeBytes is the
+  // expensive piece). Memoized over `atlas` referential identity which is
+  // stable per the singleton's bail-out.
+  const atlasSizeBytes = useMemo(
+    () => (atlas ? estimateAtlasSizeBytes(atlas) : null),
+    [atlas],
+  );
+
+  // The hooks need stable Blob / text references; we feed them either the
+  // built export or the empty placeholder. `selectedFormat === null` keeps
+  // the cluster disabled at the component level so the placeholder hooks
+  // never actually fire.
+  const blobForHooks = built?.blob ?? EMPTY_EXPORT_BLOB;
+  const textForHooks = built?.text ?? '';
+  const filenameForHooks = built?.filename ?? '';
+  const copyMode: 'text' | 'html' = built?.format === 'html' ? 'html' : 'text';
+
+  const { status: rawSaveStatus, save } = useSaveExport({
+    blob: blobForHooks,
+    filename: filenameForHooks,
+  });
+  const { status: rawOpenStatus, open } = useOpenExport({ blob: blobForHooks });
+  const {
+    status: rawCopyStatus,
+    deniedMessage,
+    copy,
+  } = useCopyExport({ text: textForHooks, mode: copyMode });
+
+  // Telemetry helpers. We only emit success/fail when the corresponding hook
+  // status TRANSITIONS — tracking via refs in the hooks would couple the
+  // hook to the surface; instead we react to the status change here.
+  const surfaceTag = 'widget' as const;
+  const scopeKind = deriveExportScopeKind(atlas);
+
+  const onSelectFormat = useCallback(
+    (format: ExportFormat) => {
+      // Read atlas at click-time per ADR-0010 / ADR-0016; falls back to the
+      // hook closure when the singleton happens to be unset.
+      const snapshot = getAtlasSnapshot();
+      const liveAtlas =
+        snapshot.kind === 'completed' || snapshot.kind === 'canceled'
+          ? snapshot.atlas
+          : (snapshot.kind === 'scanning' || snapshot.kind === 'error') &&
+              snapshot.priorAtlas
+            ? snapshot.priorAtlas
+            : atlas;
+
+      if (!liveAtlas) return;
+
+      // Resolve tenant identity. Failure here is a planning gap (the surface
+      // should not have rendered the cluster); we still guard so a missing
+      // appContext doesn't crash the render.
+      let tenant: ReturnType<typeof requireTenantIdentity>;
+      try {
+        tenant = requireTenantIdentity(appContext ?? null);
+      } catch (err) {
+        if (err instanceof AtlasNoContextError) {
+          emitExportFail({
+            surface: surfaceTag,
+            format,
+            action: 'save',
+            errorCode: 'unknown',
+          });
+          return;
+        }
+        throw err;
+      }
+
+      // Build the click-time surface context per ADR-0016.
+      const ctx: SurfaceContext = {
+        surface: surfaceTag,
+        tenant,
+        scope: { kind: scopeKind },
+        languagesScanned: [],
+        scanTimestamp: new Date(liveAtlas.scannedAt).toISOString(),
+        isPartial: liveAtlas.isPartial,
+        totals: {
+          sites: liveAtlas.totals.sites,
+          pages: liveAtlas.totals.pages,
+          renderings: liveAtlas.totals.renderings,
+          datasources: liveAtlas.totals.datasources,
+        },
+        skippedPages: [],
+      };
+
+      try {
+        const result = buildExport({
+          atlas: liveAtlas,
+          surface: surfaceTag,
+          format,
+          surfaceContext: cloneSurfaceContext(ctx),
+          exportedAt: new Date().toISOString(),
+        });
+        // The hook for Copy needs the body as a string. We read it from the
+        // freshly-built Blob asynchronously — the Copy pill stays disabled
+        // until the text resolves (a single microtask in jsdom; for low-MB
+        // atlases in production this completes well within one frame).
+        setSelectedFormat(format);
+        setBuilt({
+          blob: result.blob,
+          text: '',
+          filename: result.filename,
+          format,
+        });
+        void result.blob.text().then((body) => {
+          setBuilt((prev) =>
+            prev && prev.blob === result.blob ? { ...prev, text: body } : prev,
+          );
+        });
+      } catch {
+        emitExportFail({
+          surface: surfaceTag,
+          format,
+          action: 'save',
+          errorCode: 'blob_construction_failed',
+        });
+        showExportFailureToast({
+          errorCode: 'blob_construction_failed',
+          action: 'save',
+        });
+        setSelectedFormat(null);
+        setBuilt(null);
+      }
+    },
+    [appContext, atlas, scopeKind],
+  );
+
+  // --- per-action wiring ------------------------------------------------
+
+  const handleSave = useCallback(() => {
+    if (!built || !selectedFormat) return;
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'save',
+      atlasSize: atlasSizeBytes ?? undefined,
+      scopeKind,
+    });
+    save();
+  }, [atlasSizeBytes, built, save, scopeKind, selectedFormat]);
+
+  const handleOpen = useCallback(() => {
+    if (!built || !selectedFormat) return;
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'open',
+      atlasSize: atlasSizeBytes ?? undefined,
+      scopeKind,
+    });
+    open();
+  }, [atlasSizeBytes, built, open, scopeKind, selectedFormat]);
+
+  const handleCopy = useCallback(() => {
+    if (!built || !selectedFormat) return;
+    emitExportAttempt({
+      surface: surfaceTag,
+      format: selectedFormat,
+      action: 'copy',
+      atlasSize: atlasSizeBytes ?? undefined,
+      scopeKind,
+    });
+    void copy();
+  }, [atlasSizeBytes, built, copy, scopeKind, selectedFormat]);
+
+  // React to status transitions and emit success/fail telemetry exactly once
+  // per terminal transition. The hooks self-revert success states to 'idle'
+  // after their own windows; we fire on the rising edge into 'saved' /
+  // 'opened' / 'copied' / 'blocked' / 'denied'.
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawSaveStatus === 'saved') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'save' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'save',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    }
+  }, [atlas, built, rawSaveStatus, selectedFormat]);
+
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawOpenStatus === 'opened') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'open' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'open',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    } else if (rawOpenStatus === 'blocked') {
+      emitExportFail({
+        surface: surfaceTag,
+        format: selectedFormat,
+        action: 'open',
+        errorCode: 'popup_blocked',
+      });
+    }
+  }, [atlas, built, rawOpenStatus, selectedFormat]);
+
+  useEffect(() => {
+    if (!selectedFormat) return;
+    if (rawCopyStatus === 'copied') {
+      emitExportSuccess({ surface: surfaceTag, format: selectedFormat, action: 'copy' });
+      if (built) {
+        showExportSuccessToast({
+          filename: built.filename,
+          action: 'copy',
+          isEmptyAtlas: !atlas || atlas.totals.renderings === 0,
+        });
+      }
+    } else if (rawCopyStatus === 'denied') {
+      emitExportFail({
+        surface: surfaceTag,
+        format: selectedFormat,
+        action: 'copy',
+        errorCode: 'clipboard_blocked',
+      });
+    }
+  }, [atlas, built, rawCopyStatus, selectedFormat]);
+
+  // Cluster-level disabled state. When no atlas yet, surface state is the
+  // primary driver; when atlas is loaded, individual pills follow their
+  // hook statuses.
+  const surfaceState = deriveExportSurfaceState(state, atlas);
+
+  // Collapse hook statuses into the props expected by <DownloadButton>.
+  const saveStatus: SaveStatus = rawSaveStatus;
+  const openStatus: OpenStatus = rawOpenStatus;
+  const copyStatus: CopyStatus = rawCopyStatus;
+
+  return (
+    <DownloadButton
+      surface="widget"
+      state={surfaceState}
+      atlasSizeBytes={atlasSizeBytes}
+      onSelectFormat={onSelectFormat}
+      selectedFormat={selectedFormat}
+      saveStatus={saveStatus}
+      openStatus={openStatus}
+      copyStatus={copyStatus}
+      copyDeniedMessage={deniedMessage}
+      onSave={handleSave}
+      onOpen={handleOpen}
+      onCopy={handleCopy}
+      sandboxBlocksDownload={sandboxBlocksDownload}
+    />
   );
 }
 
@@ -186,8 +557,12 @@ function SkippedLink({
 export function WidgetSurface({
   client,
   contextId,
+  appContext = null,
+  sandboxBlocksDownload,
 }: WidgetSurfaceProps): React.ReactElement {
   const state = useAtlasSlice((s) => s);
+  const sandboxBlocked =
+    sandboxBlocksDownload ?? defaultSandboxBlocksDownload();
 
   // Local UI state — drawer open flags, query, density. Atlas state is
   // the source of truth for everything else.
@@ -322,23 +697,46 @@ export function WidgetSurface({
       {/* Zone 1 — status bar (scanning) OR freshness ribbon (otherwise) */}
       <div className="zone-1">
         {state.kind === 'scanning' ? (
-          <ScanStatusBar
-            phases={phaseStatesFor(state)}
-            currentPhase={state.progress.phase}
-            counts={{
-              current: state.progress.current,
-              total: state.progress.total,
-            }}
-            elapsedMs={state.progress.elapsedMs}
-            onCancel={() => cancelScan()}
-            isCancellable={true}
-          />
+          <>
+            <ScanStatusBar
+              phases={phaseStatesFor(state)}
+              currentPhase={state.progress.phase}
+              counts={{
+                current: state.progress.current,
+                total: state.progress.total,
+              }}
+              elapsedMs={state.progress.elapsedMs}
+              onCancel={() => cancelScan()}
+              isCancellable={true}
+            />
+            {/* AC-1.1 — refresh-with-prior: when a completed atlas is still in
+                memory, the export cluster stays visible (and operational on the
+                prior atlas) while the new scan runs in the background. */}
+            {atlas ? (
+              <div className="freshness-while-scanning flex items-center justify-end gap-2 border-b border-border bg-card px-4 py-2">
+                <WidgetExportCluster
+                  state={state}
+                  atlas={atlas}
+                  appContext={appContext ?? null}
+                  sandboxBlocksDownload={sandboxBlocked}
+                />
+              </div>
+            ) : null}
+          </>
         ) : (
           <FreshnessRibbon
             state={state}
             totals={totals}
             hostSiteName={hostSite?.displayName ?? null}
             onRefresh={() => refreshAtlas(client, contextId)}
+            exportCluster={
+              <WidgetExportCluster
+                state={state}
+                atlas={atlas}
+                appContext={appContext ?? null}
+                sandboxBlocksDownload={sandboxBlocked}
+              />
+            }
           />
         )}
       </div>

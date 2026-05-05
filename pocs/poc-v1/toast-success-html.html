@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S6 — Success toast (HTML) · poc-v1</title>
+  <link rel="stylesheet" href="poc.css">
+</head>
+<body>
+  <main class="poc-page">
+    <nav class="poc-page__breadcrumb">
+      <a href="index.html">← Back to index</a> · S6 — Success toast (HTML download)
+    </nav>
+    <div class="poc-page__caption">
+      Per-format post-state for the HTML menu item. Same toast shell;
+      open <a href="html-output-sample.html">html-output-sample.html</a>
+      to see the artifact the editor receives.
+    </div>
+
+    <div class="iframe-shell iframe-shell--widget" data-extension-point="xmc:dashboardblocks">
+      <div class="iframe-shell__chrome">
+        <span class="iframe-shell__dot"></span>
+        <span class="iframe-shell__dot"></span>
+        <span class="iframe-shell__dot"></span>
+        <span>Sitecore Cloud Portal · Dashboard widget · ~600 px</span>
+      </div>
+
+      <div class="freshness">
+        <div class="freshness__left">
+          <span aria-hidden="true" class="freshness__icon">✓</span>
+          <span class="freshness__summary">
+            <span class="muted">site </span><strong>acme-marketing-prod</strong>
+            <span class="muted"> · </span>
+            <strong>487 pages</strong>
+            <span class="muted"> · </span>
+            <strong>23 renderings</strong>
+          </span>
+        </div>
+        <div class="freshness__right">
+          <a href="widget-menu-open.html"
+             class="atlas-download-button btn btn--outline btn--sm"
+             role="button"
+             aria-haspopup="menu"
+             aria-expanded="false"
+             aria-label="Download snapshot">
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+            </svg>
+            <span>Download</span>
+          </a>
+          <button type="button" class="btn btn--default btn--sm" aria-label="Refresh atlas">
+            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
+            </svg>
+            <span>Refresh atlas</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="surface-body" style="opacity: 0.7;">
+        <p style="margin:0;">Widget atlas table (visual stub)</p>
+      </div>
+    </div>
+
+    <div class="toast-region" aria-live="polite">
+      <div class="toast toast--success" role="status">
+        <svg class="toast__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z" />
+        </svg>
+        <div class="toast__body">
+          <p class="toast__title">Download complete</p>
+          <p class="toast__message">
+            Downloaded <code>atlas-acme-marketing-prod-widget-all-collections-20260503T094211Z.html</code>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="poc-footer">
+    <span>S6 · HTML variant · auto-dismiss 4 s</span>
+    <a href="index.html">Back to index</a>
+  </footer>
+</body>
+</html>

@@ -1,991 +1,134 @@
 <!doctype html>
-<html lang="en" data-theme="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Component Usage Atlas — POC v1 (Atlas Cartographer)</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="stage" role="main">
-      <!-- ============================================================
-           Host shell — Sitecore Marketplace tenant chrome (simulated)
-           ============================================================ -->
-      <header class="host-shell" aria-label="Host tenant chrome">
-        <div class="host-shell__title">
-          <span class="compass" aria-hidden="true">&#x2316;</span>
-          <span>Component Usage Atlas</span>
-          <span data-slot="badge" data-color-scheme="info" data-size="sm">v0.1 dogfood</span>
-        </div>
-        <nav class="host-shell__crumbs" aria-label="Tenant breadcrumb">
-          <span>Sitecore XM Cloud</span>
-          <span class="sep">/</span>
-          <span>Tenant: <strong>acme-prod-eu</strong></span>
-          <span class="sep">/</span>
-          <span>Site: <strong>Acme Marketing</strong></span>
-        </nav>
-      </header>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas Snapshot Export — Quiet Affordance (poc-v1)</title>
+  <link rel="stylesheet" href="poc.css">
+</head>
+<body>
+  <main class="poc-page">
+    <div class="index-wrapper">
+      <h1>Atlas Snapshot Export — Quiet Affordance</h1>
+      <p class="lede">
+        Static HTML clickdummy for PRD-001 UI design v1.
+        Walks every screen, state, and interaction the spec defines.
+        The clickdummy is a visual prototype — no React, no build step.
+      </p>
 
-      <!-- ============================================================
-           Screen 1 — Widget · Initial scan (loading visualizer)
-           ============================================================ -->
-      <section
-        id="screen-1"
-        class="screen iframe-card widget-frame"
-        aria-label="Widget — Initial scan"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Marketplace widget · 1200 &times; auto · scanning</span>
-          <span class="muted-text">screen 1 / 6</span>
-        </div>
+      <div class="index-section">
+        <h2>Widget surface</h2>
+        <ul class="index-list">
+          <li>
+            <a href="widget.html">
+              <strong>S1 — Widget default</strong>
+              <span class="desc">Download button visible next to Refresh atlas.</span>
+            </a>
+          </li>
+          <li>
+            <a href="widget-menu-open.html">
+              <strong>S2 — Format picker (small atlas)</strong>
+              <span class="desc">Menu open, three items, no size annotations (atlas &lt; 5 MB).</span>
+            </a>
+          </li>
+          <li>
+            <a href="widget-menu-large.html">
+              <strong>S2b — Format picker (5–50 MB)</strong>
+              <span class="desc">Menu open, muted size text per item.</span>
+            </a>
+          </li>
+          <li>
+            <a href="widget-menu-huge.html">
+              <strong>S2c — Format picker (≥ 50 MB)</strong>
+              <span class="desc">Warning glyph + "Large — may take a moment".</span>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-        <div class="surface">
-          <div class="freshness" role="status" aria-live="polite">
-            <span class="freshness__title">
-              <span class="kicker" style="margin:0;">Atlas</span>
-              Surveying tenant&hellip;
-            </span>
-            <span class="freshness__meta">
-              <span>tenant <strong>acme-prod-eu</strong></span>
-              <span class="dot-sep">&middot;</span>
-              <span>started just now</span>
-            </span>
-            <span class="freshness__spacer"></span>
-            <span class="direct-bindings" title="Direct bindings only — datasources resolved via layout, not personalization rules.">
-              <span class="info-glyph" aria-hidden="true">i</span>
-              direct bindings only
-            </span>
-          </div>
+      <div class="index-section">
+        <h2>Panel surface</h2>
+        <ul class="index-list">
+          <li>
+            <a href="panel.html">
+              <strong>S4 — Panel default</strong>
+              <span class="desc">Icon-only download button, narrower iframe.</span>
+            </a>
+          </li>
+          <li>
+            <a href="panel-menu-open.html">
+              <strong>S5 — Panel format picker</strong>
+              <span class="desc">Menu open, 280 px wide.</span>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-          <div class="loading-visualizer" aria-live="polite" aria-atomic="false">
-            <div class="kicker">Cartographer trace</div>
+      <div class="index-section">
+        <h2>Toasts &amp; popover</h2>
+        <ul class="index-list">
+          <li>
+            <a href="toast-success.html">
+              <strong>S6 — Success toast</strong>
+              <span class="desc">"Downloaded …json." Auto-dismiss 4 s.</span>
+            </a>
+          </li>
+          <li>
+            <a href="toast-success-empty.html">
+              <strong>S6b — Success (empty atlas)</strong>
+              <span class="desc">Same shell, " — empty atlas." suffix.</span>
+            </a>
+          </li>
+          <li>
+            <a href="toast-failure-generic.html">
+              <strong>S7 — Generic failure toast</strong>
+              <span class="desc">Sticky. Actions: Retry · Why?</span>
+            </a>
+          </li>
+          <li>
+            <a href="toast-failure-sandbox.html">
+              <strong>S8 — Sandbox-blocked toast</strong>
+              <span class="desc">Sticky. Actions: Retry · Copy JSON to clipboard · Why?</span>
+            </a>
+          </li>
+          <li>
+            <a href="popover-why-sandbox.html">
+              <strong>S9 — "Why?" popover open</strong>
+              <span class="desc">240 px popover anchored to Why? action on sandbox toast.</span>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-            <div class="lv-trace" aria-hidden="false">
-              <div class="lv-rail">
-                <div class="lv-trail"></div>
-              </div>
-              <div class="lv-pulse" aria-hidden="true"></div>
+      <div class="index-section">
+        <h2>HTML export artifact</h2>
+        <ul class="index-list">
+          <li>
+            <a href="html-output-sample.html">
+              <strong>S11 / S12 — HTML output sample</strong>
+              <span class="desc">Self-contained, file://-openable. Print preview = DoD-4.</span>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-              <div class="lv-stops">
-                <div class="lv-stop" data-phase-index="0" data-active="true">
-                  <div class="stop-icon" aria-hidden="true">&#x29C8;</div>
-                  <div class="stop-label">Sites</div>
-                </div>
-                <div class="lv-stop" data-phase-index="1" data-active="false">
-                  <div class="stop-icon" aria-hidden="true">&#x25A4;</div>
-                  <div class="stop-label">Pages</div>
-                </div>
-                <div class="lv-stop" data-phase-index="2" data-active="false">
-                  <div class="stop-icon" aria-hidden="true">&#x25CE;</div>
-                  <div class="stop-label">Components</div>
-                </div>
-              </div>
-            </div>
+      <div class="index-section">
+        <h2>Reference</h2>
+        <ul class="index-list">
+          <li>
+            <a href="click-targets.md">
+              <strong>click-targets.md</strong>
+              <span class="desc">Full enumeration of every clickable element across every frame.</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
 
-            <div class="lv-meta">
-              <span id="lv-phase" class="lv-phase">Surveying sites&hellip;</span>
-              <span id="lv-counter" class="lv-counter tabular-nums">0 / 38 sites</span>
-              <span id="lv-elapsed" class="lv-elapsed tabular-nums">00:00</span>
-              <span class="lv-actions">
-                <button
-                  id="lv-cancel"
-                  type="button"
-                  data-slot="button"
-                  data-variant="outline"
-                  data-size="sm"
-                  aria-label="Cancel scan and view partial results"
-                >
-                  Cancel scan
-                </button>
-              </span>
-            </div>
-          </div>
-
-          <div data-slot="alert" data-color-scheme="info" role="note">
-            <span class="alert-icon" aria-hidden="true">&#x2139;</span>
-            <span>
-              The cartographer walks every site, page, and rendering binding under this tenant.
-              You can cancel at any time and explore a partial map.
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           Screen 2 — Widget · Scan complete (search + table)
-           ============================================================ -->
-      <section
-        id="screen-2"
-        class="screen iframe-card widget-frame is-active"
-        aria-label="Widget — Scan complete"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Marketplace widget · 1200 &times; auto · ready</span>
-          <span class="muted-text">screen 2 / 6</span>
-        </div>
-
-        <div class="surface">
-          <div class="freshness">
-            <span class="freshness__title">
-              <span class="kicker" style="margin:0;">Atlas</span>
-              Tenant map ready
-            </span>
-            <span class="freshness__meta">
-              <span><strong>38</strong> sites</span>
-              <span class="dot-sep">&middot;</span>
-              <span><strong>1,247</strong> pages</span>
-              <span class="dot-sep">&middot;</span>
-              <span><strong>412</strong> renderings</span>
-              <span class="dot-sep">&middot;</span>
-              <span>scanned 2 min ago</span>
-            </span>
-            <span class="freshness__spacer"></span>
-            <span class="freshness__actions">
-              <span class="direct-bindings" title="Direct layout bindings only.">
-                <span class="info-glyph" aria-hidden="true">i</span>
-                direct bindings only
-              </span>
-              <button
-                type="button"
-                data-slot="button"
-                data-variant="outline"
-                data-size="sm"
-              >
-                Re-scan
-              </button>
-            </span>
-          </div>
-
-          <div class="widget-search-row row-gap-tight">
-            <div data-slot="search-input" style="flex:1; min-width:280px;">
-              <span class="search-icon" aria-hidden="true">&#x1F50D;</span>
-              <input
-                type="search"
-                placeholder="Find a rendering by display name or template id&hellip;"
-                aria-label="Search renderings"
-              />
-              <span class="search-shortcut" aria-hidden="true">Ctrl K</span>
-            </div>
-            <button type="button" data-slot="select-trigger" aria-haspopup="listbox">
-              <span>All sites</span>
-              <span aria-hidden="true">&#x25BE;</span>
-            </button>
-            <button type="button" data-slot="select-trigger" aria-haspopup="listbox">
-              <span>Rarity: any</span>
-              <span aria-hidden="true">&#x25BE;</span>
-            </button>
-          </div>
-
-          <div class="widget-table" role="region" aria-label="Renderings table">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Rendering</th>
-                  <th scope="col" class="col-pages">Used on</th>
-                  <th scope="col" class="col-ds">Datasources</th>
-                  <th scope="col" class="col-time">Last seen</th>
-                  <th scope="col">Rarity</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="col-name">
-                    Hero Banner
-                    <span class="disambig">/sxa/Project/Acme/Hero</span>
-                  </td>
-                  <td class="col-pages">312</td>
-                  <td class="col-ds">287</td>
-                  <td class="col-time">2026-04-26 14:02</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Promo Tile
-                    <span class="disambig">/sxa/Project/Acme/Promo</span>
-                  </td>
-                  <td class="col-pages">204</td>
-                  <td class="col-ds">198</td>
-                  <td class="col-time">2026-04-26 13:48</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Navigation Primary
-                    <span class="disambig">/sxa/Foundation/Nav</span>
-                  </td>
-                  <td class="col-pages">1,247</td>
-                  <td class="col-ds">38</td>
-                  <td class="col-time">2026-04-26 14:11</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="info">Site-wide</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Investor Quote Strip
-                    <span class="disambig">/sxa/Project/AcmeIR/Quote</span>
-                  </td>
-                  <td class="col-pages">7</td>
-                  <td class="col-ds">7</td>
-                  <td class="col-time">2026-04-25 09:14</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="warning">Rare</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Article Body
-                    <span class="disambig">/sxa/Foundation/Article</span>
-                  </td>
-                  <td class="col-pages">418</td>
-                  <td class="col-ds">418</td>
-                  <td class="col-time">2026-04-26 13:55</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    CTA Banner
-                    <span class="disambig">/sxa/Project/Acme/CTA</span>
-                  </td>
-                  <td class="col-pages">96</td>
-                  <td class="col-ds">88</td>
-                  <td class="col-time">2026-04-26 12:30</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Event Countdown
-                    <span class="disambig">/sxa/Project/Acme/Event</span>
-                  </td>
-                  <td class="col-pages">3</td>
-                  <td class="col-ds">3</td>
-                  <td class="col-time">2026-03-12 17:02</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="warning">Rare</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Product Carousel
-                    <span class="disambig">/sxa/Project/Acme/Carousel</span>
-                  </td>
-                  <td class="col-pages">52</td>
-                  <td class="col-ds">52</td>
-                  <td class="col-time">2026-04-25 22:11</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Footer Compact
-                    <span class="disambig">/sxa/Foundation/Footer</span>
-                  </td>
-                  <td class="col-pages">1,205</td>
-                  <td class="col-ds">36</td>
-                  <td class="col-time">2026-04-26 14:11</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="info">Site-wide</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Legacy Sidebar
-                    <span class="disambig">/sxa/Project/Legacy/Sidebar</span>
-                  </td>
-                  <td class="col-pages">1</td>
-                  <td class="col-ds">1</td>
-                  <td class="col-time">2025-11-04 08:19</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="warning">Orphan-ish</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <button type="button" class="skipped-link" aria-haspopup="dialog">
-            <span aria-hidden="true">&#x26A0;</span>
-            Skipped 3 pages &mdash; tap to inspect reasons
-          </button>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           Screen 3 — Widget · Drawer open
-           ============================================================ -->
-      <section
-        id="screen-3"
-        class="screen iframe-card widget-frame is-drawer-open"
-        aria-label="Widget — Drawer open"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Marketplace widget · drawer · Hero Banner</span>
-          <span class="muted-text">screen 3 / 6</span>
-        </div>
-
-        <div class="surface">
-          <div class="freshness">
-            <span class="freshness__title">Tenant map ready</span>
-            <span class="freshness__meta">
-              <span><strong>38</strong> sites</span>
-              <span class="dot-sep">&middot;</span>
-              <span><strong>1,247</strong> pages</span>
-              <span class="dot-sep">&middot;</span>
-              <span>scanned 2 min ago</span>
-            </span>
-          </div>
-
-          <div class="widget-search-row row-gap-tight">
-            <div data-slot="search-input" style="flex:1; min-width:280px;">
-              <span class="search-icon" aria-hidden="true">&#x1F50D;</span>
-              <input type="search" placeholder="Find a rendering&hellip;" aria-label="Search renderings" value="Hero" />
-              <span class="search-shortcut" aria-hidden="true">Ctrl K</span>
-            </div>
-          </div>
-
-          <div class="widget-table" role="region" aria-label="Renderings table">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Rendering</th>
-                  <th scope="col" class="col-pages">Used on</th>
-                  <th scope="col" class="col-ds">Datasources</th>
-                  <th scope="col" class="col-time">Last seen</th>
-                  <th scope="col">Rarity</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="is-active">
-                  <td class="col-name">
-                    Hero Banner
-                    <span class="disambig">/sxa/Project/Acme/Hero</span>
-                  </td>
-                  <td class="col-pages">312</td>
-                  <td class="col-ds">287</td>
-                  <td class="col-time">2026-04-26 14:02</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Hero Banner — Compact
-                    <span class="disambig">/sxa/Project/Acme/HeroCompact</span>
-                  </td>
-                  <td class="col-pages">41</td>
-                  <td class="col-ds">41</td>
-                  <td class="col-time">2026-04-25 18:33</td>
-                  <td>
-                    <span data-slot="badge">Common</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="col-name">
-                    Hero Banner — Video
-                    <span class="disambig">/sxa/Project/Acme/HeroVideo</span>
-                  </td>
-                  <td class="col-pages">9</td>
-                  <td class="col-ds">9</td>
-                  <td class="col-time">2026-04-21 11:02</td>
-                  <td>
-                    <span data-slot="badge" data-color-scheme="warning">Rare</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Drawer (Sheet) -->
-        <div data-slot="sheet-overlay" data-close-drawer aria-hidden="true"></div>
-        <aside data-slot="sheet" role="dialog" aria-label="Hero Banner usage detail">
-          <div data-slot="sheet-header">
-            <div>
-              <div class="kicker">You are here</div>
-              <h3 style="margin:4px 0 4px 0; font-size: var(--text-xl); font-weight: 600;">
-                Hero Banner
-              </h3>
-              <div class="drawer-id-line">
-                <span>/sxa/Project/Acme/Hero</span>
-                <span class="dot-sep">&middot;</span>
-                <span>{A1B2C3D4-…}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="ghost"
-              data-size="icon"
-              data-close-drawer
-              aria-label="Close drawer"
-            >
-              &times;
-            </button>
-          </div>
-          <div data-slot="sheet-content">
-            <div class="drawer-section">
-              <h4>Mini-radar &mdash; fan-out</h4>
-              <div class="section-meta">
-                <span>312 pages across 14 sites</span>
-                <span class="dot-sep">&middot;</span>
-                <span>287 unique datasources</span>
-              </div>
-              <div class="row-gap-tight" aria-label="Cross-site fan-out">
-                <span class="coord-badge"><span>Acme Marketing</span><span class="ds-count">186</span><span class="arrow" aria-hidden="true">&rsaquo;</span></span>
-                <span class="coord-badge"><span>Acme Investor Relations</span><span class="ds-count">42</span><span class="arrow" aria-hidden="true">&rsaquo;</span></span>
-                <span class="coord-badge"><span>Acme Careers</span><span class="ds-count">31</span><span class="arrow" aria-hidden="true">&rsaquo;</span></span>
-                <span class="coord-badge is-warning"><span>Acme Legacy</span><span class="ds-count">2</span><span class="arrow" aria-hidden="true">&rsaquo;</span></span>
-                <span class="coord-badge"><span>+10 sites</span><span class="arrow" aria-hidden="true">&rsaquo;</span></span>
-              </div>
-            </div>
-
-            <hr data-slot="separator" data-decorative="isobar" />
-
-            <div class="drawer-section">
-              <h4>Pages</h4>
-              <div class="section-meta">
-                <span>Sorted by last seen</span>
-                <span class="dot-sep">&middot;</span>
-                <span>showing 6 of 312</span>
-              </div>
-              <ul class="drawer-page-list">
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Marketing &mdash; Home</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Marketing/Home</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Marketing &mdash; Products / Cloud</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Marketing/Products/Cloud</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Marketing &mdash; Solutions / Retail</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Marketing/Solutions/Retail</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Investor Relations &mdash; Home</span>
-                    <span class="dpr-path">/sitecore/content/Acme/IR/Home</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Careers &mdash; Engineering</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Careers/Engineering</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Legacy &mdash; Press 2018</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Legacy/Press-2018</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div data-slot="sheet-footer">
-            <span>312 pages &middot; 287 datasources</span>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="outline"
-              data-size="sm"
-              data-close-drawer
-            >
-              Close
-            </button>
-          </div>
-        </aside>
-      </section>
-
-      <!-- ============================================================
-           Screen 4 — Panel · Page context
-           ============================================================ -->
-      <section
-        id="screen-4"
-        class="screen iframe-card panel-frame"
-        aria-label="Panel — Page context"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Pages panel · 380px</span>
-          <span class="muted-text">4 / 6</span>
-        </div>
-
-        <div class="panel-surface">
-          <div class="panel-fresh">
-            <span>Tenant map &middot; 2 min ago</span>
-            <span class="direct-bindings" title="Direct bindings only">
-              <span class="info-glyph" aria-hidden="true">i</span>
-              direct only
-            </span>
-          </div>
-
-          <div class="you-are-here">
-            <div class="yah-header">
-              <span class="yah-dot" aria-hidden="true"></span>
-              You are here
-            </div>
-            <div class="yah-page">Products / Cloud</div>
-            <div class="yah-path">/sitecore/content/Acme/Marketing/Products/Cloud</div>
-          </div>
-
-          <div class="kicker">Renderings on this page (7)</div>
-          <ul class="panel-list" aria-label="Renderings on the current page">
-            <li>
-              <span class="li-name">
-                <span class="name-text">Hero Banner</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="Hero Banner — used on 312 other pages">
-                <span>312</span>
-                <span class="ds-count">/ 287 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="name-text">Promo Tile</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="Promo Tile — used on 204 other pages">
-                <span>204</span>
-                <span class="ds-count">/ 198 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="name-text">Article Body</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="Article Body — used on 418 other pages">
-                <span>418</span>
-                <span class="ds-count">/ 418 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="name-text">Product Carousel</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="Product Carousel — used on 52 other pages">
-                <span>52</span>
-                <span class="ds-count">/ 52 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="li-warning-icon" aria-hidden="true">&#x26A0;</span>
-                <span class="name-text">Investor Quote Strip</span>
-              </span>
-              <span class="coord-badge is-warning" data-jump="5" tabindex="0" role="button" aria-label="Investor Quote Strip — rare, used on 7 pages">
-                <span>7</span>
-                <span class="ds-count">/ 7 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="name-text">CTA Banner</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="CTA Banner — used on 96 pages">
-                <span>96</span>
-                <span class="ds-count">/ 88 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-            <li>
-              <span class="li-name">
-                <span class="name-text">Footer Compact</span>
-              </span>
-              <span class="coord-badge" data-jump="5" tabindex="0" role="button" aria-label="Footer Compact — site-wide rendering">
-                <span>1,205</span>
-                <span class="ds-count">/ 36 ds</span>
-                <span class="arrow" aria-hidden="true">&rsaquo;</span>
-              </span>
-            </li>
-          </ul>
-
-          <hr data-slot="separator" data-decorative="isobar" />
-
-          <div class="panel-section-header">
-            <span>Datasource impact</span>
-            <span class="muted-text">14 unique</span>
-          </div>
-          <p class="muted-text" style="margin:0; font-size: var(--text-xs);">
-            Editing any item below ripples to the renderings above. Tap a counter to
-            see where else it&rsquo;s consumed across the tenant.
-          </p>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           Screen 5 — Panel · Counter drawer
-           ============================================================ -->
-      <section
-        id="screen-5"
-        class="screen iframe-card panel-frame is-drawer-open"
-        aria-label="Panel — Counter drawer"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Panel · drawer · Hero Banner fan-out</span>
-          <span class="muted-text">5 / 6</span>
-        </div>
-
-        <div class="panel-surface" aria-hidden="true">
-          <div class="panel-fresh">
-            <span>Tenant map &middot; 2 min ago</span>
-            <span class="muted-text">direct only</span>
-          </div>
-          <div class="you-are-here">
-            <div class="yah-header">
-              <span class="yah-dot" aria-hidden="true"></span>
-              You are here
-            </div>
-            <div class="yah-page">Products / Cloud</div>
-            <div class="yah-path">/sitecore/content/Acme/Marketing/Products/Cloud</div>
-          </div>
-          <div class="kicker">Renderings on this page (7)</div>
-          <ul class="panel-list">
-            <li>
-              <span class="li-name"><span class="name-text">Hero Banner</span></span>
-              <span class="coord-badge"><span>312</span><span class="ds-count">/ 287 ds</span></span>
-            </li>
-            <li>
-              <span class="li-name"><span class="name-text">Promo Tile</span></span>
-              <span class="coord-badge"><span>204</span><span class="ds-count">/ 198 ds</span></span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Drawer over the panel -->
-        <div data-slot="sheet-overlay" data-close-drawer aria-hidden="true"></div>
-        <aside
-          data-slot="sheet"
-          role="dialog"
-          aria-label="Hero Banner — cross-tenant usage"
-          style="width:340px;"
-        >
-          <div data-slot="sheet-header">
-            <div>
-              <div class="kicker">Counter drawer</div>
-              <h3 style="margin:4px 0 4px 0; font-size: var(--text-lg); font-weight: 600;">
-                Hero Banner
-              </h3>
-              <div class="drawer-id-line">
-                <span>used on 312 pages &middot; 287 datasources</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="ghost"
-              data-size="icon"
-              data-close-drawer
-              aria-label="Close drawer"
-            >
-              &times;
-            </button>
-          </div>
-          <div data-slot="sheet-content">
-            <div class="drawer-section">
-              <h4>Cross-site fan-out</h4>
-              <div class="section-meta">14 sites</div>
-              <div class="row-gap-tight">
-                <span class="coord-badge"><span>Acme Marketing</span><span class="ds-count">186</span></span>
-                <span class="coord-badge"><span>Acme Investor Relations</span><span class="ds-count">42</span></span>
-                <span class="coord-badge"><span>Acme Careers</span><span class="ds-count">31</span></span>
-                <span class="coord-badge"><span>Acme Newsroom</span><span class="ds-count">28</span></span>
-                <span class="coord-badge"><span>Acme Partners</span><span class="ds-count">12</span></span>
-                <span class="coord-badge is-warning"><span>Acme Legacy</span><span class="ds-count">2</span></span>
-              </div>
-            </div>
-
-            <hr data-slot="separator" data-decorative="isobar" />
-
-            <div class="drawer-section">
-              <h4>Sample pages</h4>
-              <ul class="drawer-page-list">
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Marketing &mdash; Home</span>
-                    <span class="dpr-path">/Acme/Marketing/Home</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>IR &mdash; Quarterly Results</span>
-                    <span class="dpr-path">/Acme/IR/Quarterly</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Careers &mdash; Engineering</span>
-                    <span class="dpr-path">/Acme/Careers/Engineering</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Legacy &mdash; Press 2018</span>
-                    <span class="dpr-path">/Acme/Legacy/Press-2018</span>
-                  </div>
-                  <span class="chev" aria-hidden="true">&rsaquo;</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div data-slot="sheet-footer">
-            <span>tap a page to jump</span>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="outline"
-              data-size="sm"
-              data-close-drawer
-            >
-              Back to panel
-            </button>
-          </div>
-        </aside>
-      </section>
-
-      <!-- ============================================================
-           Screen 6 — Skipped pages sub-drawer
-           ============================================================ -->
-      <section
-        id="screen-6"
-        class="screen iframe-card widget-frame is-drawer-open is-subdrawer-open"
-        aria-label="Skipped pages sub-drawer"
-      >
-        <div class="iframe-card__chrome">
-          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          <span>Marketplace widget · sub-drawer · skipped pages</span>
-          <span class="muted-text">6 / 6</span>
-        </div>
-
-        <div class="surface" aria-hidden="true">
-          <div class="freshness">
-            <span class="freshness__title">Tenant map ready</span>
-            <span class="freshness__meta">
-              <span><strong>1,247</strong> pages</span>
-              <span class="dot-sep">&middot;</span>
-              <span><strong>3</strong> skipped</span>
-            </span>
-          </div>
-          <div class="widget-table" aria-hidden="true">
-            <table>
-              <thead>
-                <tr>
-                  <th>Rendering</th>
-                  <th class="col-pages">Used on</th>
-                  <th class="col-ds">Datasources</th>
-                  <th class="col-time">Last seen</th>
-                  <th>Rarity</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="col-name">Hero Banner</td>
-                  <td class="col-pages">312</td>
-                  <td class="col-ds">287</td>
-                  <td class="col-time">2026-04-26 14:02</td>
-                  <td><span data-slot="badge">Common</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Primary drawer (kept open visually as backdrop layer) -->
-        <div data-slot="sheet-overlay" data-close-drawer aria-hidden="true"></div>
-        <aside data-slot="sheet" aria-hidden="true">
-          <div data-slot="sheet-header">
-            <div>
-              <div class="kicker">You are here</div>
-              <h3 style="margin:4px 0 4px 0; font-size: var(--text-xl); font-weight: 600;">
-                Skipped pages
-              </h3>
-            </div>
-          </div>
-          <div data-slot="sheet-content">
-            <p class="muted-text" style="font-size: var(--text-xs);">
-              These pages could not be mapped during the last scan. Rerun the scan
-              after resolving permissions or transient errors.
-            </p>
-          </div>
-        </aside>
-
-        <!-- Sub-drawer — the focal layer -->
-        <aside
-          data-slot="sheet"
-          class="sub-drawer"
-          role="dialog"
-          aria-label="Skipped pages — reasons and detail"
-        >
-          <div data-slot="sheet-header">
-            <div>
-              <div class="kicker">Sub-drawer</div>
-              <h3 style="margin:4px 0 4px 0; font-size: var(--text-lg); font-weight: 600;">
-                Skipped 3 pages
-              </h3>
-              <div class="drawer-id-line">
-                <span>scan run 2026-04-26 14:11 UTC</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="ghost"
-              data-size="icon"
-              data-close-drawer
-              aria-label="Close sub-drawer"
-            >
-              &times;
-            </button>
-          </div>
-          <div data-slot="sheet-content">
-            <div class="drawer-section">
-              <h4>Filter by reason</h4>
-              <div class="reason-chips" role="group" aria-label="Filter by skip reason">
-                <button type="button" class="reason-chip is-forbidden" aria-pressed="true">
-                  <span aria-hidden="true">&#x1F512;</span>
-                  permission denied (2)
-                </button>
-                <button type="button" class="reason-chip is-timeout" aria-pressed="false">
-                  <span aria-hidden="true">&#x23F1;</span>
-                  timeout (1)
-                </button>
-                <button type="button" class="reason-chip is-network" aria-pressed="false">
-                  <span aria-hidden="true">&#x26A1;</span>
-                  network error (0)
-                </button>
-                <button type="button" class="reason-chip" aria-pressed="false">
-                  other (0)
-                </button>
-              </div>
-            </div>
-
-            <hr data-slot="separator" data-decorative="isobar" />
-
-            <div class="drawer-section">
-              <h4>Pages</h4>
-              <ul class="drawer-page-list">
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme HR &mdash; Internal Policies</span>
-                    <span class="dpr-path">/sitecore/content/Acme/HR/Policies</span>
-                  </div>
-                  <span data-slot="badge" data-color-scheme="warning">permission denied</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Legal &mdash; Contracts Vault</span>
-                    <span class="dpr-path">/sitecore/content/Acme/Legal/Vault</span>
-                  </div>
-                  <span data-slot="badge" data-color-scheme="warning">permission denied</span>
-                </li>
-                <li class="drawer-page-row">
-                  <div class="dpr-name">
-                    <span>Acme Newsroom &mdash; Archive 2014</span>
-                    <span class="dpr-path">/sitecore/content/Acme/News/Archive-2014</span>
-                  </div>
-                  <span data-slot="badge" data-color-scheme="info">timeout 30s</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div data-slot="sheet-footer">
-            <span>3 of 1,250 pages skipped</span>
-            <button
-              type="button"
-              data-slot="button"
-              data-variant="outline"
-              data-size="sm"
-              data-close-drawer
-            >
-              Close
-            </button>
-          </div>
-        </aside>
-      </section>
-
-      <!-- ============================================================
-           Screen navigator (POC chrome — not part of the product UI)
-           ============================================================ -->
-      <nav class="screen-nav" aria-label="POC screen navigator">
-        <div class="screen-nav__title">
-          <span>POC v1 &mdash; Atlas Cartographer</span>
-          <span class="muted-text">6 screens</span>
-        </div>
-        <div class="screen-nav__list" role="list">
-          <button class="screen-nav__item" data-target="screen-1" type="button">
-            <span class="num">1</span>
-            <span>Widget &middot; Initial scan</span>
-          </button>
-          <button class="screen-nav__item" data-target="screen-2" type="button">
-            <span class="num">2</span>
-            <span>Widget &middot; Scan complete</span>
-          </button>
-          <button class="screen-nav__item" data-target="screen-3" type="button">
-            <span class="num">3</span>
-            <span>Widget &middot; Drawer open</span>
-          </button>
-          <button class="screen-nav__item" data-target="screen-4" type="button">
-            <span class="num">4</span>
-            <span>Panel &middot; Page context</span>
-          </button>
-          <button class="screen-nav__item" data-target="screen-5" type="button">
-            <span class="num">5</span>
-            <span>Panel &middot; Counter drawer</span>
-          </button>
-          <button class="screen-nav__item" data-target="screen-6" type="button">
-            <span class="num">6</span>
-            <span>Skipped pages sub-drawer</span>
-          </button>
-        </div>
-        <div class="screen-nav__theme">
-          <span class="muted-text">Theme</span>
-          <button
-            id="theme-toggle"
-            type="button"
-            data-slot="button"
-            data-variant="outline"
-            data-size="sm"
-            aria-pressed="false"
-            aria-label="Toggle color theme"
-          >
-            <span id="theme-toggle-label">Light</span>
-          </button>
-        </div>
-      </nav>
-    </main>
-
-    <script src="app.js"></script>
-  </body>
+  <footer class="poc-footer">
+    <span>poc-v1 · Quiet Affordance · UI design v1 · 2026-05-03</span>
+    <span>products/component-usage-atlas/pocs/poc-v1/</span>
+  </footer>
+</body>
 </html>
