@@ -37,6 +37,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export type CopyMode = 'text' | 'html';
 
@@ -145,14 +146,18 @@ export function useCopyExport(
         revertTimerRef.current = null;
       }, 1800);
     } catch {
-      // Any rejection — permission denied, SecurityError, quota — transitions
-      // to the sticky denied state. Single fallback message per § 4c-4.
+      // Any rejection — permission denied, SecurityError, quota — flips the
+      // status to denied AND fires a transient toast. The denied status is
+      // still kept on the button (drives `data-status` + sr-only aria-label)
+      // but is no longer rendered as visible inline copy (operator feedback
+      // 2026-05-16: inline orange text between toolbar buttons read as ugly).
       setStatus('denied');
       statusRef.current = 'denied';
       if (revertTimerRef.current) {
         clearTimeout(revertTimerRef.current);
         revertTimerRef.current = null;
       }
+      toast.error(CLIPBOARD_DENIED_MESSAGE, { duration: 5000 });
     }
   }, [available, text, mode]);
 

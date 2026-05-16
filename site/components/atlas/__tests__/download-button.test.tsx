@@ -145,13 +145,18 @@ describe('<DownloadButton /> — action cluster (Save / Open / Copy)', () => {
         {...baseProps({ selectedFormat: 'json', openStatus: 'blocked', onOpen })}
       />,
     );
-    // Inline message renders next to the pill (visible status + sr-only
-    // describedby span both carry the copy — assert both render).
-    const inlineMatches = screen.getAllByText('Popup blocked — use Copy instead.');
-    expect(inlineMatches.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Popup blocked — use Copy instead.',
-    );
+    // Operator polish 2026-05-16: inline visible "blocked" copy was removed
+    // in favour of a sonner toast fired from use-open-export.ts. The button
+    // still carries data-status="blocked" + an sr-only describedby span.
+    expect(
+      screen.getByRole('button', { name: /open snapshot in new tab/i }),
+    ).toHaveAttribute('data-status', 'blocked');
+    const openBtn = screen.getByRole('button', {
+      name: /open snapshot in new tab/i,
+    });
+    const reason = document.getElementById(openBtn.getAttribute('aria-describedby')!);
+    expect(reason).not.toBeNull();
+    expect(reason!.textContent).toContain('Popup blocked');
   });
 
   // (d) Copy click → status transitions: copying / copied / denied / unsupported
@@ -196,11 +201,18 @@ describe('<DownloadButton /> — action cluster (Save / Open / Copy)', () => {
         })}
       />,
     );
-    // The denied copy lands twice: visible status + sr-only describedby
-    // span. Assert visible via role=status and assert both renders exist.
-    const deniedMatches = screen.getAllByText(deniedMessage);
-    expect(deniedMatches.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole('status')).toHaveTextContent(deniedMessage);
+    // Operator polish 2026-05-16: visible inline copy was removed in favour
+    // of a sonner toast fired from use-copy-export.ts. The sr-only
+    // describedby span still announces the denied message to screen readers.
+    expect(
+      screen.getByRole('button', { name: /copy snapshot to clipboard/i }),
+    ).toHaveAttribute('data-status', 'denied');
+    const copyBtn = screen.getByRole('button', {
+      name: /copy snapshot to clipboard/i,
+    });
+    const reason = document.getElementById(copyBtn.getAttribute('aria-describedby')!);
+    expect(reason).not.toBeNull();
+    expect(reason!.textContent).toBe(deniedMessage);
 
     rerender(
       <DownloadButton

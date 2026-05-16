@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 // Supersedes ADR-0014's "root returns notFound()" rule — this app now ships
 // an IntroPage at `/` so visiting the deploy URL outside the iframe lands on
@@ -19,6 +20,9 @@ export default function IntroPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="container mx-auto px-4 py-16">
+        <div className="flex justify-end mb-2">
+          <ThemeSwitcher />
+        </div>
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-foreground mb-6 tracking-tight">
             Component Usage Atlas

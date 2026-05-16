@@ -2,10 +2,13 @@
   "schema_version": 4,
   "run_id": "20260503T101441Z",
   "created_at": "2026-05-03T10:14:41Z",
-  "updated_at": "2026-05-05T07:30:00Z",
+  "updated_at": "2026-05-08T00:00:00Z",
   "product_slug": "component-usage-atlas",
   "product_root": "products/component-usage-atlas",
   "status": "shipped_with_caveats",
+  "closed_at": "2026-05-08T00:00:00Z",
+  "closure_disposition": "smoke_caveats_accepted_permanently",
+  "closure_notes": "Operator closed atlas PRD-001 on 2026-05-08 by accepting all 4 pending smoke entries as permanent won't-do caveats: t047 HTML print preview, t048 host-frame visual smoke, live_walkthrough, bundle_cap_dod5. Final status remains shipped_with_caveats per the smoke gate (skipped smoke is itself a caveat). PRD-000 (atlas core) remains shipped via its own PR; PRD-001 (Snapshot Export) ships behind the host-frame untested. If a future revival needs the smoke gates discharged, see individual entry notes for what's required (host URL, POC re-spin, bundle re-measurement). Code is on branch prd-001 at https://github.com/Chris1415/Sitecore.Plugin.Component-Usage-Atlas.git.",
   "planning_track": "minimal",
   "architecture": {
     "extension_points": [
@@ -186,32 +189,36 @@
       }
     },
     "t047_html_print_preview": {
-      "outcome": "pending",
+      "outcome": "skipped",
+      "outcome_prior": "pending",
       "category": "manual_gate",
       "description": "DoD-4: HTML output renders cleanly in print preview on Chromium + Firefox + Safari at A4 + Letter paper sizes. Manual gate; reference is pocs/poc-v1/html-output-sample.html.",
       "evidence": null,
-      "notes": "Deferred to manual run. Re-record outcome by re-running /test with print-preview screenshots, or edit this entry directly after manual verification."
+      "notes": "WONT-DO 2026-05-08 — operator closed atlas PRD-001 with smoke caveats permanently accepted. Print preview was never walked; HTML output sample exists at pocs/poc-v1/html-output-sample.html if a future revival needs it."
     },
     "t048_host_frame_smoke": {
-      "outcome": "pending",
+      "outcome": "skipped",
+      "outcome_prior": "pending",
       "category": "host_frame_visual",
       "description": "Per sitecore:marketplace-sdk-host-frame-testing — clipped iframe screenshots on widget + panel surfaces, compared against pocs/poc-v1/ on the five axes (layout, typography, color, component anatomy, state fidelity).",
       "evidence": null,
-      "notes": "Host URL not supplied at /test time — recorded as WARN-level deferred per command rule (no silent skip). Also blocked on POC re-spin: pocs/poc-v1/ shows pre-fork single-Download UX; full smoke needs both live render AND updated POC frames for the action-cluster shape (deferred to /document polish per ADR-0021)."
+      "notes": "WONT-DO 2026-05-08 — operator closed atlas PRD-001 with smoke caveats permanently accepted. Compounding blockers: host URL never supplied AND POC re-spin needed (pocs/poc-v1/ shows pre-fork single-Download UX, not the three-action egress per ADR-0021). Future revival would need both live render + POC frame regeneration for the action-cluster shape."
     },
     "live_walkthrough": {
-      "outcome": "pending",
+      "outcome": "skipped",
+      "outcome_prior": "pending",
       "category": "live_walkthrough",
-      "description": "Per /test § 1d-i.8: drive the installed app for ≥5 minutes as a real editor. Click every primary CTA + format/action combination; trigger every drawer/modal; verify list-of-renderings behavior past 20 items. MANDATORY before status can transition to shipped. May yield design findings that unit/integration tests miss (PRD-000 surfaced 4 product findings here that host-frame smoke missed).",
+      "description": "Per /test § 1d-i.8: drive the installed app for ≥5 minutes as a real editor. Click every primary CTA + format/action combination; trigger every drawer/modal; verify list-of-renderings behavior past 20 items.",
       "evidence": null,
-      "notes": "Distinct from host-frame smoke per agent identity. Status stays tested_pending_smoke until this is recorded."
+      "notes": "WONT-DO 2026-05-08 — operator closed atlas PRD-001 with smoke caveats permanently accepted. Ship gate forces shipped_with_caveats (skipped smoke is itself a caveat); operator accepts the wider untested surface as a permanent caveat rather than chasing the host-frame session."
     },
     "bundle_cap_dod5": {
-      "outcome": "pending",
+      "outcome": "skipped",
+      "outcome_prior": "pending",
       "category": "audit",
-      "description": "DoD-5 / NFR-1.4: cumulative gzipped delta ≤20 KB vs PRD-000 baseline. Currently estimated ~37.9 KB feature-attributable (file-summing × 35% compression ratio — coarse measurement). Resolution path: re-measure with next-bundle-analyzer for precise feature share OR amend NFR-1.4 at /document time to reflect post-fork architecture (cap was sized pre-ADR-0021).",
+      "description": "DoD-5 / NFR-1.4: cumulative gzipped delta ≤20 KB vs PRD-000 baseline. Currently estimated ~37.9 KB feature-attributable (file-summing × 35% compression ratio — coarse measurement).",
       "evidence": "products/component-usage-atlas/project-planning/workflow/friction-log-20260503T101441Z.md (bundle_smoke section)",
-      "notes": "Not a code defect — measurement is approximate and the cap was set before the pageshot pattern fork. Tracked here so /ship enforces the gate; planning/measurement decision."
+      "notes": "WONT-DO 2026-05-08 — operator closed atlas PRD-001 with smoke caveats permanently accepted. Cap was set pre-ADR-0021 fork; the three-action egress is structurally heavier than the original single-Download. NFR-1.4 stands as documentation of the original target but is not enforced for this PRD; future PRD revisions can re-measure with next-bundle-analyzer or amend the NFR formally."
     }
   },
   "notes": [
