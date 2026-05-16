@@ -39,6 +39,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+const OPEN_BLOCKED_TOAST = 'Popup blocked — use Copy instead.';
 
 export type OpenStatus = 'idle' | 'opening' | 'opened' | 'blocked';
 
@@ -90,6 +93,14 @@ export function useOpenExport(
     const nextStatus: OpenStatus = newWin ? 'opened' : 'blocked';
     setStatus(nextStatus);
     statusRef.current = nextStatus;
+
+    // Operator feedback 2026-05-16: the inline orange "blocked" copy between
+    // toolbar buttons looked ugly. Surface the same advisory as a transient
+    // sonner toast instead. The status state stays for the disabled / data-*
+    // hooks the button uses.
+    if (nextStatus === 'blocked') {
+      toast.error(OPEN_BLOCKED_TOAST, { duration: 5000 });
+    }
 
     // Auto-revert in both branches. 'opened' uses pageshot's 1.4 s window;
     // 'blocked' uses 3.5 s — long enough for the editor to read the

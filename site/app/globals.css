@@ -580,7 +580,12 @@
     --card-foreground: var(--foreground);
     --popover: var(--background);
     --popover-foreground: var(--foreground);
-    --primary: var(--color-primary-200);
+    /* Bumped from --color-primary-200 (pale lavender, near-invisible on dark
+     * gray) to --color-primary-400 (vivid lavender) so accent borders, focus
+     * rings and fills register against the dark background. The 200-tier
+     * lives on for --primary-foreground because it sits on a primary-tinted
+     * background where the lighter shade reads correctly. */
+    --primary: var(--color-primary-400);
     --primary-foreground: var(--color-primary-200);
     --secondary: var(--muted);
     --secondary-foreground: var(--foreground);

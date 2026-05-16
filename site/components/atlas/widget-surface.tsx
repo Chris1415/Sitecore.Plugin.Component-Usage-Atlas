@@ -41,6 +41,7 @@ import { CounterRail } from '@/components/atlas/counter-rail';
 import { DensityToggle, type Density } from '@/components/atlas/density-toggle';
 import { WidgetTable } from '@/components/atlas/widget-table';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import {
   DownloadButton,
   type CopyStatus,
@@ -755,6 +756,7 @@ export function WidgetSurface({
             density
           </span>
           <DensityToggle value={density} onChange={setDensity} />
+          <ThemeSwitcher />
         </div>
       </div>
 

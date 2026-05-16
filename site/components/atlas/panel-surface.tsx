@@ -56,6 +56,7 @@ import { DatasourceImpactGroup } from '@/components/atlas/datasource-impact-grou
 import { UsageDrawer } from '@/components/atlas/usage-drawer';
 import { DatasourceUsageDrawer } from '@/components/atlas/datasource-usage-drawer';
 import { SkippedDrawer } from '@/components/atlas/skipped-drawer';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import {
   DownloadButton,
   type CopyStatus,
@@ -818,6 +819,7 @@ export function PanelSurface({
               <span>{skipped.length} skipped</span>
             </button>
           ) : null}
+          <ThemeSwitcher />
         </div>
         <PageContextCard
           pageName={activePageName ?? undefined}

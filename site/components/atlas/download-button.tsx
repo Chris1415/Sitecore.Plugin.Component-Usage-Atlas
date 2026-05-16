@@ -286,15 +286,9 @@ export function DownloadButton(props: DownloadButtonProps) {
           {openReason}
         </span>
       ) : null}
-      {/* Visible inline status copy when Open is blocked. */}
-      {openStatus === 'blocked' ? (
-        <span
-          role="status"
-          className="text-xs text-warning-fg whitespace-nowrap"
-        >
-          {OPEN_BLOCKED_INLINE}
-        </span>
-      ) : null}
+      {/* Visible inline copy was removed in favour of a sonner toast fired
+       * from use-open-export.ts on the popup-blocked path (operator feedback
+       * 2026-05-16). data-status="blocked" + sr-only aria-label still active. */}
 
       {/* Copy */}
       <Button
@@ -317,15 +311,12 @@ export function DownloadButton(props: DownloadButtonProps) {
           {copyReason}
         </span>
       ) : null}
-      {/* Visible inline status copy when Copy is denied. */}
-      {copyStatus === 'denied' ? (
-        <span
-          role="status"
-          className="text-xs text-warning-fg whitespace-nowrap"
-        >
-          {copyDeniedMessage}
-        </span>
-      ) : null}
+      {/* Visible inline copy was removed in favour of a sonner toast fired
+       * from use-copy-export.ts on the denial path (operator feedback
+       * 2026-05-16: inline orange text between toolbar buttons read as ugly).
+       * The sr-only `copyReason` span above still announces the message to
+       * screen readers, and `data-status="denied"` is still set on the
+       * button for styling / test hooks. */}
       </div>
     </TooltipProvider>
   );
