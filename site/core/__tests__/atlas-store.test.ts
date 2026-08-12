@@ -1,29 +1,8 @@
-// T030 + T032 RED+GREEN — Inline tests for `core/atlas-store.ts`.
-//
-// Behaviors covered:
-//
-//   getAtlasSnapshot:
-//     1. Initial state is `{ kind: 'idle' }`.
-//     2. Calling twice without mutation returns referentially-stable state.
-//     3. Returned state is FROZEN (mutations throw).
-//
-//   setAtlasState:
-//     4. Notifies all subscribers with no arguments.
-//     5. Setting the same reference is a no-op (no notification).
-//
-//   subscribeAtlas:
-//     6. Returns an unsubscribe function that removes the listener.
-//
-//   resetAtlas:
-//     7. Sets state to `{ kind: 'idle' }`.
-//     8. Clears the strict-mode `scanInFlight` guard.
-//
-//   strict-mode guard (T030 § 10 scenario 6):
-//     9. `markScanStarting` returns true the first time, false on the second.
-//
-//   __resetForTest (T032):
-//    10. In NODE_ENV='test', resets state and listeners and scanInFlight.
-//    11. Outside test env, throws.
+/**
+ * Store contract: frozen snapshots, referential stability, no-op on an
+ * identical set, and the strict-mode scan guard.
+ * See docs/build-decisions.md#atlas-store.
+ */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

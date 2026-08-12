@@ -1,36 +1,15 @@
 'use client';
 
-// T050 / T052 / T053 / T054 — `<PanelSurface />`.
-//
-// Page-context-first panel for the `xmc:pages:context-panel` extension
-// point. Differs from the widget surface in three load-bearing ways
-// (architecture § 4.5.2 / ADR-0004):
-//
-//   1. Subscribes to `pages.context` via `client.query('pages.context',
-//      { subscribe: true, onSuccess })` — the Pages-host fires the
-//      callback whenever the editor navigates pages so Zone 3 re-paints
-//      immediately. The widget surface NEVER subscribes (per
-//      `client.md` § 7 — `xmc:dashboardblocks` doesn't expose this).
-//
-//   2. Issues a SECOND independent fetch for the components on the
-//      ACTIVE page on a separate `AbortBus` so the rendering stack
-//      paints in <1s even on a 5k-page tenant whose global scan is
-//      still in progress (OQ-A5).
-//
-//   3. Suppresses Zone 4 — no KPI rail. The panel viewport is narrow
-//      and the cross-tenant counter is the primary signal, not the
-//      tenant aggregates.
-//
-// The surface owns ONLY local UI state (active pageId, drawer open
-// flag, per-page components result). Atlas state is read via
-// `useAtlasSlice` exactly the same way the widget reads it.
-//
-// Lifecycle:
-//   mount         → subscribe(pages.context); start global scan if idle
-//                   → fetchComponents(activePageId) on a new AbortBus
-//   page-switch   → cancel old AbortBus, fetchComponents(newPageId) on
-//                   a fresh bus, do NOT re-trigger global scan
-//   unmount       → unsubscribe; abort the page-fetch bus
+/**
+ * Page-context-first panel for xmc:pages:context-panel. Differs from the widget
+ * in three load-bearing ways: it SUBSCRIBES to pages.context (the widget's
+ * extension point cannot), it issues a SECOND page-scoped fetch on its own
+ * abort bus so the stack paints fast on a large tenant, and it suppresses the
+ * KPI rail.
+ *
+ * On page switch: cancel the old bus, fetch on a fresh one, do NOT re-trigger
+ * the global scan. See docs/build-decisions.md#panel-vs-widget.
+ */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type * as React from 'react';

@@ -1,34 +1,12 @@
-// T030 — Atlas state singleton (architecture § 7.2 / ADR-0010).
-// T032 — `__resetForTest()` test helper.
-//
-// Module-scoped state. NOT on `window`. NOT in React Context. NOT in
-// Zustand / Redux / SWR. The atlas is a single source of truth and the
-// surfaces subscribe via `useSyncExternalStore` (T031).
-//
-// Public API:
-//
-//   getAtlasSnapshot()         → AtlasState
-//                                  Referentially-stable; safe for the
-//                                  `getSnapshot` arg of useSyncExternalStore.
-//   setAtlasState(next)        → void
-//                                  No-op when `next === current` (referential
-//                                  bail-out). Otherwise updates and notifies
-//                                  every subscriber.
-//   subscribeAtlas(listener)   → () => void  (unsubscribe)
-//   resetAtlas()               → void
-//                                  Sets state to `{ kind: 'idle' }` AND
-//                                  clears the strict-mode `scanInFlight`
-//                                  guard. The action layer (T033) calls
-//                                  this only on explicit user-initiated
-//                                  reset paths.
-//   markScanStarting()         → boolean
-//                                  Strict-mode double-mount guard. The
-//                                  action layer calls this BEFORE invoking
-//                                  `runScan`; if it returns `false`, a scan
-//                                  is already in flight and the second
-//                                  invocation must no-op.
-//   __resetForTest()           → void
-//                                  Test-only. Throws outside NODE_ENV='test'.
+/**
+ * Atlas state singleton — module-scoped, NOT on window / React Context /
+ * Zustand / Redux / SWR. Surfaces subscribe via useSyncExternalStore.
+ *
+ * The snapshot is referentially stable and FROZEN; setAtlasState is a no-op on
+ * an identical reference. markScanStarting() is the strict-mode double-mount
+ * guard — call it BEFORE runScan and no-op on false.
+ * See docs/build-decisions.md#atlas-store.
+ */
 
 import type { AtlasState } from '@/lib/sdk/types';
 

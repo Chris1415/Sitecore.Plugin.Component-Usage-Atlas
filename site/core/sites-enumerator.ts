@@ -1,29 +1,11 @@
-// T020 — Sites enumerator.
-//
-// Thin orchestration around `lib/sdk/queries.ts::queryAllSites` and
-// (when scope === 'collection') `queryListCollections`. Returns the
-// list of sites the scan should walk, normalized to the `Site`
-// Atlas-domain shape.
-//
-// Per § 4 T020 / § 10 T020:
-//   - scope `'all-collections'` → call `queryAllSites` only.
-//   - scope `'collection'` → call BOTH and filter by `collectionId`.
-//   - empty filter result → return `[]` (caller decides what to do).
-//
-// `siteName` is preserved on every returned `Site` because the page
-// list endpoint keys by name, not id (architecture § 5.5).
-//
-// SDK shape sources cited in `lib/sdk/queries.ts`:
-//   - `node_modules/@sitecore-marketplace-sdk/xmc/dist/xmc/src/client-agent/types.gen.d.ts`
-//     (sites/list — lean: id/name/targetHostname/rootPath only)
-//   - `node_modules/@sitecore-marketplace-sdk/xmc/dist/xmc/src/client-sites/types.gen.d.ts`
-//     (collections — id/name/displayName)
-//
-// The lean agent endpoint does NOT carry `collectionId`. To resolve a
-// site's collection we cross-reference with the collections list. The
-// agent endpoint also lacks `displayName`, so we fall back to
-// `siteName` for editor-facing rendering until/unless a per-site
-// `retrieveSite` call (T021) supplies it.
+/**
+ * Sites enumerator. siteName is preserved on every returned Site because the
+ * page-list endpoint keys by NAME, not id.
+ *
+ * The lean agent endpoint carries no collectionId and no displayName, so a
+ * site's collection is resolved by cross-referencing the collections list.
+ * See docs/build-decisions.md#double-unwrap.
+ */
 
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 

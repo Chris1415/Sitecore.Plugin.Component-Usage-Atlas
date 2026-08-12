@@ -1,34 +1,12 @@
 'use client';
 
 /**
- * T032 — Action cluster component (Save / Open / Copy pills).
+ * Action cluster: format picker + Save / Open / Copy. The filename is kept for
+ * git-diff continuity; the export name is stable so importers do not move.
  *
- * Filename `download-button.tsx` is preserved for git-diff continuity per
- * ADR-0021's supersession of the single-Download-button pattern. The export
- * is named `<DownloadButton>` so the existing import surface stays stable;
- * the component itself now renders the three-action cluster.
- *
- * Composition: format picker (T033) followed by three action pills (Save /
- * Open / Copy). Per ADR-0021:
- *   - Save is canonical-but-disabled in the current Marketplace iframe sandbox
- *     (`sandboxBlocksDownload === true` OR `saveStatus === 'unsupported'`).
- *   - Open is the primary user-visible action (`window.open` works because
- *     the sandbox grants `allow-popups`).
- *   - Copy is the third primary action (text mode for JSON/CSV, html mode
- *     with text/plain peer for HTML).
- *
- * Status state is owned by the parent surface (T036/T037) — this component
- * receives statuses via props and renders them. The three hooks (T052/T054/
- * T056) live one level up.
- *
- * Surface variants:
- *   - widget: pill row with `variant="outline" colorScheme="neutral"`,
- *     icon + label at desktop width (≥ 480 px) and icon-only with sr-only
- *     label below the breakpoint.
- *   - panel: always icon-only `variant="ghost" colorScheme="neutral"` size
- *     `icon-sm`; sr-only label carries the verbose copy for screen readers.
- *
- * Pageshot precedent: `products/pageshot/site/next-app/components/ActionPill.tsx`.
+ * Save is canonical-but-disabled in the current sandbox, Open is primary.
+ * Status is owned by the parent surface — this renders it.
+ * See docs/build-decisions.md#three-actions.
  */
 
 import {

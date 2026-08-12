@@ -1,38 +1,11 @@
-// T023 — HTML adapter for the Atlas export.
-//
-// Emits a single self-contained HTML document per PRD-001 § 10.3 + UI
-// design § 4.7:
-//   - <!doctype html> + <html lang="en">
-//   - <head> with charset, title, inlined <style> (screen + print CSS).
-//   - <body> with <header> (h1 + <dl class="summary"> + optional
-//     partial-scan badge), <main> (<table> with lite columns + optional
-//     skipped + empty-state paragraphs), <footer> (schema version +
-//     attribution).
-//
-// Safety contracts:
-//   - R6 / OQ-9 XSS guard: every interpolated string passes through
-//     `escapeHtml()` (5-entity escape: & < > " '). Applies to both
-//     text-context AND attribute-context (case (s) in T024).
-//   - No <script> tags (NFR-4.3). No remote assets / fonts (AC-3.2).
-//     Inlined `system-ui` fallback chain only.
-//   - Tenant fallback per ADR-0020: when `ctx.tenant.tenantName === null`,
-//     summary <dd> renders `tenant-${tenantId.slice(-7)}`. JSON keeps
-//     `null`; CSV/HTML synthesize the fallback string.
-//   - Schema version constant (ADR-0019) is read via
-//     `header.atlas_export_schema_version` — no literal `1` appears here.
-//
-// Print stylesheet exactly per UI design § 4.7.6:
-//   body { font: 11pt/1.4 system-ui, sans-serif; }
-//   table { font-size: 10pt; }
-//   thead { display: table-header-group; }
-//   tr { page-break-inside: avoid; }
-//   .badge-partial { print-color-adjust: exact; }
-//
-// Color tokens are inlined hex values per UI design § 4.7.3 — derived
-// from Blok tokens (cited inline in `app/globals.css`).
-//
-// Module size cap: ≤ 300 LOC (NFR-5.1). Inline CSS counts toward the
-// budget — keep concise.
+/**
+ * HTML adapter — one self-contained document.
+ *
+ * ⚠ Every interpolated string passes through escapeHtml() in BOTH text and
+ * attribute context. No <script> tags, no remote assets or fonts.
+ * Tenant fallback: docs/build-decisions.md#tenant-fallback.
+ * Schema version comes from the header builder, never a literal.
+ */
 
 import type { Atlas, RenderingUsage, DatasourceUsage } from '@/lib/sdk/types';
 import type { SurfaceContext } from '../surface-context';

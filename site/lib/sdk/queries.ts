@@ -1,44 +1,17 @@
-// T015 — Typed wrappers around the Marketplace SDK `client.query` calls.
+// THE SDK boundary. Every function takes an already-narrowed `contextId:
+// string` (never `string | undefined`) and returns a normalised Atlas-shape
+// value, so `core/` and `components/` never touch a raw SDK type.
 //
-// This module is the SDK boundary. Every function takes an already-narrowed
-// `contextId: string` (per architecture § 5.9 / xmc.md § 12a — never
-// `string | undefined`) and returns a normalized Atlas-shape value. The
-// translation from `SdkX` (raw SDK shapes — see `lib/sdk/types.ts`) to the
-// Atlas-domain shape happens HERE so that `core/` and `components/` never
-// touch raw SDK types.
+// ⚠ DOUBLE unwrap: `QueryResult.data` is itself a hey-api envelope, so the
+// payload is at `result.data?.data`. `unwrapOk` below peels both once and
+// discriminates on `error`, which keeps `as` casts off this boundary.
 //
-// Per `40-sdk-contracts.mdc` (always-on): every SDK call cites the
-// `.d.ts` path it targets near the call site so future SDK upgrades have
-// a hard anchor for verification.
+// Per rule 40, every call cites the `.d.ts` it targets at the call site.
+// Verified response shapes and the lean-vs-rich endpoint split:
+// docs/build-decisions.md#double-unwrap.
 //
-// OQ-A1 / OQ-A2 findings (M2 friction log, T005):
-//   - `xmc.agent.pagesGetComponentsOnPage` returns the ENVELOPE
-//     `{ pageId, pageName, components?: ComponentModel[] | null, ... }` —
-//     NOT a flat `ComponentRecord[]`. We unwrap with
-//     `result.data?.data?.components ?? []` then map each
-//     `SdkComponentModel` to `ComponentRecord`.
-//   - `xmc.agent.sitesGetAllPagesBySite` returns a FLAT `Array<PageModel>`
-//     with no pagination. We DO NOT loop on a continuation token — there
-//     isn't one in the SDK.
-//   - `xmc.agent.sitesGetSitesList` returns `{ sites: SiteBasicModel[] }`.
-//     We unwrap `result.data?.data?.sites ?? []`.
-//   - `xmc.sites.retrieveSite` returns the rich `Site` shape. The lean
-//     agent endpoint does NOT carry `displayName` / `collectionId` /
-//     `languages`, so callers needing those fields must use the sites
-//     module path.
-//
-// Double-unwrap caveat (per `client.md` § 8b + hey-api `RequestResult`):
-// the `client.query` `QueryResult<K>.data` is itself a hey-api envelope
-// `{ data: T; error: undefined; request; response } | { data: undefined;
-// error; request; response }`. So accessing the actual payload requires
-// `result.data?.data` — i.e. peel TWO layers. The narrowing helper
-// `unwrapOk` below does this once and discriminates on `error` so we
-// keep `as` casts off the SDK boundary.
-//
-// Errors propagate to the caller (the enumerators in `core/` classify
-// failures via `error-classifier.ts`). All page/component fetches are
-// wrapped in `withBackoff` (rate-limit retry per ADR-0012) and a
-// `Promise.race` against `PER_PAGE_TIMEOUT_MS` (12s per page).
+// Errors propagate to the caller; fetches are wrapped in `withBackoff` and
+// raced against PER_PAGE_TIMEOUT_MS.
 
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 
@@ -336,36 +309,18 @@ const deriveNameFromPath = (path: string): string => {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the components placed on a single page in the given language.
+ * Components placed on one page.
  *
- * Per OQ-A1 (M2 friction log T005), the SDK response is an ENVELOPE,
- * not a flat array:
- *
- *   GetPageComponentsResponse = {
- *     pageId, pageName, pagePath, version, language,
- *     components?: Array<ComponentModel> | null,
- *     route?, layoutEditingKind?, ...
- *   }
- *
- * We unwrap with `result.data?.components ?? []` then map each
- * `SdkComponentModel` to the Atlas-shape `ComponentRecord` per the
- * rename table:
- *
- *   ComponentModel.id          → ComponentRecord.placementId
- *   ComponentModel.componentId → ComponentRecord.renderingId
- *   ComponentModel.componentName → ComponentRecord.renderingName
- *   ComponentModel.placeholder → ComponentRecord.placeholderKey
- *   ComponentModel.dataSource (string | null) → ComponentRecord.datasourceId (string | undefined)
+ * ⚠ The response is an ENVELOPE, not a flat array — the components live at
+ * `.components`, so this unwraps `result.data?.components ?? []` and maps each
+ * SDK model onto the Atlas shape (id -> placementId, componentId -> renderingId,
+ * componentName -> renderingName, placeholder -> placeholderKey,
+ * dataSource -> datasourceId).
  *
  * SDK shape: `node_modules/@sitecore-marketplace-sdk/xmc/dist/xmc/src/client-agent/types.gen.d.ts`
- *   - `PagesGetComponentsOnPageResponses[200] = GetPageComponentsResponse`
- *   - `ComponentModel = { id, componentId, componentName, dataSource?, placeholder?, ... }`
+ *   PagesGetComponentsOnPageResponses[200] = GetPageComponentsResponse
  *
- * Wrapped in `withBackoff` (rate-limit retry, ADR-0012) and a 12s
- * per-page timeout (`PER_PAGE_TIMEOUT_MS`). The caller (T023
- * components-fetcher) decides what to do with the failure; this
- * wrapper re-throws so `Promise.allSettled` in the engine can collect
- * it.
+ * Re-throws so Promise.allSettled in the engine can collect the failure.
  */
 export async function queryComponentsOnPage(
   client: ClientSDK,
