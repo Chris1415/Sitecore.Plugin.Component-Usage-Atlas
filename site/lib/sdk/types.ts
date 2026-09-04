@@ -36,35 +36,12 @@ export type CollectionId = string;
 // `xmc.agent.pagesGetComponentsOnPage` returns a wrapper response — NOT a
 // flat `ComponentRecord[]`. The components live at `.components`.
 // Source: `node_modules/@sitecore-marketplace-sdk/xmc/dist/xmc/src/client-agent/types.gen.d.ts`
-//   declare namespace Agent {
-//     type ComponentModel = {
-//       id: string;
-//       componentId: string;
-//       componentName: string;
-//       dataSource?: string | null;
-//       placeholder?: string | null;
-//       parameters?: ComponentParametersModel | null;
-//       deviceId?: string | null;
-//       layoutId?: string | null;
-//       componentDetails?: ComponentDetailsModel | null;
-//     };
-//     type GetPageComponentsResponse = {
-//       pageId: string; pageName: string; pagePath: string;
-//       version: number; language: string;
-//       components?: Array<ComponentModel> | null;
-//       /* + route, layoutEditingKind, template */
-//     };
-//   }
+// (the shapes below mirror it — read the .d.ts, not a copy of it, on upgrade).
 //
-// OQ-A1 finding: the SDK uses `componentId` / `componentName` / `dataSource`
-// (string ID, not an object) / `placeholder` (not `placeholderKey`). The
-// `parameters` field is a structured `ComponentParametersModel` with named
-// keys, not the open-ended `Record<string, unknown>` § 4c-6.6 expected.
-// Inherited / token / personalized bindings are NOT inferable from this
-// shape — they are a server-side concept; the SDK only returns the literal
-// `dataSource` ID for the placement, which is exactly the "direct binding"
-// per ADR-0006. This makes ADR-0006's "v1 = direct only" alignment
-// straightforward.
+// ⚠ Inherited / token / personalized bindings are NOT inferable from this
+// shape — they are a server-side concept, and the SDK returns only the literal
+// `dataSource` id for a placement. That is exactly the "direct binding" v1
+// scopes itself to. See docs/build-decisions.md#double-unwrap.
 
 export type SdkComponentParameters = {
   GridParameters?: string | null;

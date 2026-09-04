@@ -1,32 +1,12 @@
-// T025 — `triggerDownload` is the canonical Save mechanism per
-// ADR-0017 § Primary mechanism.
-//
-// Pipeline:
-//   1. URL.createObjectURL(blob)         — fails at this layer if Blob
-//                                          exceeded browser limits;
-//                                          returns `blob_construction_failed`.
-//   2. document.createElement('a')       — synthetic anchor.
-//   3. anchor.href = url; .download = filename; .style.display = 'none'.
-//   4. document.body.appendChild(anchor) — mandatory; detached anchors
-//                                          no-op in some browsers.
-//   5. anchor.click() in try/catch       — synchronous throw means the
-//                                          iframe sandbox blocked the
-//                                          download; returns
-//                                          `sandbox_blocked_download`.
-//   6. queueMicrotask cleanup            — anchor.remove(),
-//                                          URL.revokeObjectURL(url).
-//
-// ADR-0021 § "pageshot pattern" fork: this module remains canonical. The
-// Save action ships disabled in the current sandbox (per ADR-0017 §
-// Primary mechanism + ADR-0021), but the mechanism is future-proof —
-// when Sitecore unblocks `allow-downloads` in the iframe sandbox, this
-// triggers without code change. `useSaveExport` (T052, next batch) wires
-// it in. Caller chains `detectFailure` for the 5 s heuristic per ADR-0017
-// § Detection contract.
-//
-// No reads from singletons / React context (mirrors construction purity
-// per ADR-0016 — the only side effects here are the DOM mutations
-// above and the URL.createObjectURL/revokeObjectURL pair).
+/**
+ * Canonical Save mechanism. The anchor MUST be appended to the document —
+ * detached anchors no-op in some browsers — and the click is caught, because a
+ * synchronous throw means the iframe sandbox blocked the download.
+ *
+ * Ships disabled in the current sandbox but is future-proof: when
+ * allow-downloads is granted this works unchanged.
+ * See docs/build-decisions.md#three-actions and #trigger-download.
+ */
 
 export type TriggerDownloadErrorCode =
   | 'blob_construction_failed'

@@ -1,29 +1,12 @@
-// T013 — Filename builder for Atlas exports.
-//
-// Implements the slug rules per PRD-001 § 9.4 + ADR-0020 (canonical
-// tenant-name fallback) + IS-17 (collection collision suffix). All
-// inputs are project-internal (TenantIdentity comes from
-// `core/tenant-identity.ts`); no SDK shapes touched here.
-//
-// Pattern:
-//   widget: atlas-<tenantSlug>-widget-<scopeSlug>-<tsCompact>.<ext>
-//   panel:  atlas-<tenantSlug>-panel-<pageSlug>-<tsCompact>.<ext>
-//
-// Slug rules (§ 9.4):
-//   - lowercase ASCII
-//   - replace whitespace + punctuation with '-'
-//   - collapse '-' runs
-//   - trim leading / trailing '-'
-//
-// Tenant fallback (ADR-0020): when `tenant.tenantName === null` (or
-// slugifies to empty), use `tenant-<last-7-of-tenantId>` — a single
-// canonical token, applied uniformly across filename and CSV/HTML
-// header presentation. JSON header keeps `null` (NOT this string) so
-// tooling can detect the fallback case.
-//
-// Length cap: total filename ≤ 200 chars. When over, truncate the
-// page-name slug component first per FR-6.3 (drops the human-readable
-// part before any other field).
+/**
+ * Export filename builder. Slug rules, a 200-char cap that truncates the
+ * PAGE-name component first, and the tenant fallback
+ * `tenant-<last-7-of-tenantId>` when the name is null.
+ *
+ * ⚠ That fallback is for the filename and the CSV/HTML headers only — JSON
+ * keeps the literal null so tooling can DETECT the fallback case.
+ * See docs/build-decisions.md#tenant-fallback.
+ */
 
 import type { TenantIdentity } from '@/core/tenant-identity';
 

@@ -1,43 +1,12 @@
-// T027 — Scan engine orchestrator (architecture § 4.5).
-//
-// `runScan(input)` returns a `ScanHandle = { cancel, donePromise }`.
-// The handle is owned by the action layer (T033) which stores it as
-// `currentHandle` and exposes `cancelScan()` / `refreshAtlas()`.
-//
-// Steps (per § 4 T027 + architecture § 4.5):
-//
-//   1. Validate `contextId` (empty string → AtlasNoContextError →
-//      transition to error state with reason 'no-context').
-//   2. Set state → `scanning(phase: 'sites')`. Emit `scan_started`.
-//   3. Enumerate sites via `enumerateSites`. On failure → error
-//      state ('sites-fetch-failed'). Emit `scan_error`.
-//   4. Phase transition → 'pages'. Resolve site language via
-//      `resolveSiteLanguageWithCache` (concurrency-pool, cap 8).
-//      Per-site language resolution failures fall back to 'en' so
-//      the scan continues (architecture § 4.4 / § 5.4 — site-level
-//      faults aren't fatal to the scan).
-//   5. Per-site `enumeratePages` to flatten into `pageRefs[]`.
-//   6. Phase transition → 'components'. `runWithConcurrency` over
-//      `pageRefs.map(p => () => fetchComponents(...))`. Each per-page
-//      result is a `PromiseSettledResult<ComponentRecord[]>` —
-//      rejections are classified as `Skipped` by the index-builder.
-//   7. `buildIndices(pageRefs, results)`. `freezeAtlas(...)`.
-//   8. If `signal.aborted` at any point during the components phase
-//      AND the user explicitly canceled → state = `canceled` with
-//      `isPartial: true`. Emit `scan_canceled`. Otherwise state =
-//      `completed`. Emit `scan_completed`.
-//
-// The scan-state-machine guards every transition (T025) so a buggy
-// engine emits a clearly named error rather than corrupting state.
-//
-// Errors NOT from per-page fan-out (sites enumeration, language
-// resolution if the bus catastrophically fails) → state = 'error'.
-// Per-page rejections are NORMAL and end up in `skipped[]`.
-//
-// SDK isolation: this module never reaches into `client.query` /
-// `client.mutate` directly. All SDK access is brokered by the
-// queries/enumerator/fetcher modules so M3's "mock SDK at the
-// queries.ts boundary" rule (per § 4 T015 friction note) holds.
+/**
+ * Scan orchestrator. Per-page rejections are NORMAL — they are classified into
+ * Atlas.skipped and the scan still ends `completed`. Only failures outside the
+ * per-page fan-out become `error`. Cancel preserves the partial atlas.
+ *
+ * Never reaches into client.query directly — all SDK access is brokered by the
+ * queries/enumerator/fetcher modules, which is what makes "mock at the queries
+ * boundary" hold. See docs/build-decisions.md#failure-classification.
+ */
 
 import { createAbortBus } from '@/core/abort-bus';
 import {

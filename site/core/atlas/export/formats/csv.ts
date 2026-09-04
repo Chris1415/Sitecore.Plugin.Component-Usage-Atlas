@@ -1,35 +1,12 @@
-// T021 — CSV adapter for the Atlas export.
-//
-// Emits the lite (one-row-per-rendering) CSV per PRD-001 § 10.2:
-//   - 9- or 10-line `#`-prefixed comment header block (10 when skipped
-//     pages present; 9 otherwise) — declared key order matches the §
-//     10.2 spec block.
-//   - Column header row (5 cols widget; 6 cols panel).
-//   - Data rows in deterministic order (rendering_id ASC).
-//   - Optional `# skipped_pages: <count>` footer.
-//
-// Determinism contracts (IS-14 / AC-4.1 / § 10.4 / DoD-3):
-//   - widget rows sorted by rendering_id ASC.
-//   - panel rows sorted by rendering_id ASC.
-//
-// Safety contracts:
-//   - RFC 4180 quoting: any string field containing `,`, `"`, `\r`,
-//     `\n` is wrapped in `"..."` with internal `"` doubled.
-//   - R4 / OQ-9 formula-injection guard: any string field whose first
-//     char is `=`, `+`, `-`, `@` gets a leading `'` prepended. Numeric
-//     fields are NOT guarded (regression case (p) — `0` ≠ `'0`).
-//   - Tenant fallback per ADR-0020: when `ctx.tenant.tenantName === null`,
-//     the `# Tenant:` line renders `tenant-${tenantId.slice(-7)}`. JSON
-//     keeps the literal `null`; CSV/HTML synthesize the fallback string.
-//   - UTF-8 NO BOM (FR-2.2). The output is a plain JS string; the
-//     consumer wraps it in a Blob with `text/csv;charset=utf-8`. We
-//     never prepend `\uFEFF`.
-//
-// Schema version constant (ADR-0019) is read via `header.atlas_export_schema_version`,
-// which the header builder sources from `../schema-version`. No literal
-// `1` appears here.
-//
-// Module size cap: ≤ 300 LOC (NFR-5.1).
+/**
+ * CSV adapter. RFC 4180 quoting, rows sorted by rendering_id ASC so re-export
+ * is byte-stable, UTF-8 with NO BOM.
+ *
+ * ⚠ Formula-injection guard: a string field starting with = + - or @ gets a
+ * leading apostrophe. NUMERIC fields are deliberately NOT guarded — 0 must not
+ * become '0. Tenant fallback: docs/build-decisions.md#tenant-fallback.
+ * Schema version comes from the header builder, never a literal.
+ */
 
 import type { Atlas, RenderingUsage, DatasourceUsage } from '@/lib/sdk/types';
 import type { SurfaceContext } from '../surface-context';

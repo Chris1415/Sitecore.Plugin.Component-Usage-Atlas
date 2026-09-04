@@ -1,41 +1,13 @@
 'use client';
 
 /**
- * T054 — `useOpenExport` hook (GREEN).
+ * Open hook — the PRIMARY user-visible action, because the Marketplace sandbox
+ * grants allow-popups even though it lacks allow-downloads.
  *
- * Mirrors pageshot precedent at
- * `products/pageshot/site/next-app/components/use-open-image.ts:62` —
- * adapted for an arbitrary atlas-export Blob (JSON / CSV / HTML) instead of
- * pageshot's base64 PNG.
- *
- * Per ADR-0021 § The three actions, Open is the primary user-visible action
- * in the current Marketplace iframe sandbox: `window.open(blobUrl, '_blank',
- * 'noopener,noreferrer')` works because the sandbox grants `allow-popups`
- * even though it lacks `allow-downloads`. The new tab opens in a real
- * top-level browsing context where the browser either renders the payload
- * inline (HTML), shows the JSON / CSV verbatim, or offers a save dialog
- * depending on user agent.
- *
- * API:
- *   ```
- *   const { status, open } = useOpenExport({ blob });
- *   ```
- *
- * - `status` — `'idle' | 'opening' | 'opened' | 'blocked'`.
- * - `open()` — runs `URL.createObjectURL(blob)` then `window.open`. If the
- *              returned window is `null` status flips to `'blocked'` for an
- *              inline "popup blocked" advisory, then auto-reverts to `'idle'`
- *              after 3.5 s so the editor can retry. The null return is an
- *              imperfect signal — when called with `noopener,noreferrer`,
- *              browsers may return `null` even when the popup actually opens
- *              because `noopener` severs the opener relationship (a
- *              well-known browser quirk reported live during PRD-001 smoke
- *              by the user — the new tab opened successfully but the hook's
- *              null check fired a false positive). Treating `'blocked'` as
- *              advisory + transient avoids permanently disabling Open on a
- *              false negative. Otherwise status flips to `'opened'` then
- *              auto-reverts to `'idle'` after 1.4 s. The blob URL is revoked
- *              after 60 s so the new tab has time to read it.
+ * ⚠ A null return from window.open is an imperfect blocked-signal: with
+ * noopener,noreferrer browsers may return null even when the tab DID open. So
+ * 'blocked' is advisory and transient rather than disabling Open on a false
+ * negative. See docs/build-decisions.md#three-actions.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';

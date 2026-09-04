@@ -1,39 +1,10 @@
 'use client';
 
 /**
- * T056 — `useCopyExport` hook (GREEN).
- *
- * Mirrors pageshot precedent at
- * `products/pageshot/site/next-app/components/use-copy-image.ts:128-148` —
- * but text-aware (atlas exports are JSON / CSV / HTML strings; pageshot
- * copies a base64 PNG via an `image/png` ClipboardItem).
- *
- * Per ADR-0021 § The three actions, Copy is the third primary user-visible
- * action. JSON / CSV go through `navigator.clipboard.writeText` (text path);
- * HTML goes through `ClipboardItem` with both `text/html` and `text/plain`
- * peer entries so the editor can paste rich HTML into Outlook / Pages and
- * also drop into a code editor as plain text.
- *
- * API:
- *   ```
- *   const { available, status, deniedMessage, copy } = useCopyExport({ text, mode });
- *   ```
- *
- * - `available`     — `false` at mount when the browser lacks the relevant
- *                     APIs (text mode requires `navigator.clipboard?.writeText`;
- *                     html mode requires `ClipboardItem` + `navigator.clipboard?.write`).
- * - `status`        — `'idle' | 'copying' | 'copied' | 'denied' | 'unsupported'`.
- * - `deniedMessage` — stable string literal: "Clipboard access was blocked.
- *                     Use Open instead." (Diverges from pageshot, which
- *                     points at Download — the atlas pattern uses Open as
- *                     the primary user-visible action per ADR-0021.)
- * - `copy()`        — text mode: `await navigator.clipboard.writeText(text)`.
- *                     html mode: constructs a ClipboardItem with text/html
- *                     + text/plain peer Blobs and calls
- *                     `await navigator.clipboard.write([item])`. On success
- *                     flips status to `'copied'` for 1.8 s then back to
- *                     `'idle'`. On rejection flips to sticky `'denied'`
- *                     (no auto-revert; subsequent calls are no-ops).
+ * Copy hook, mode-aware: JSON/CSV via writeText, HTML via a ClipboardItem
+ * carrying BOTH text/html and a text/plain peer so the same copy pastes rich
+ * into Outlook or Pages and plain into a code editor. A denial is sticky.
+ * See docs/build-decisions.md#three-actions.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';

@@ -1,35 +1,10 @@
 'use client';
 
 /**
- * T052 — `useSaveExport` hook (GREEN).
- *
- * Canonical Save mechanism per ADR-0017 § Primary mechanism + ADR-0021
- * § The three actions. Mirrors pageshot's
- * `products/pageshot/site/next-app/components/use-download-image.ts:99-110`
- * (synthetic `<a download>` + click + deferred revoke), but adapted for an
- * arbitrary text/HTML Blob (atlas exports are JSON / CSV / HTML — not
- * pageshot's base64 PNG).
- *
- * The Save action is canonical and matches PRD-001 IS-15 / FR-3, but the
- * Marketplace iframe sandbox currently lacks `allow-downloads` so the action
- * is rendered DISABLED at the surface level (`sandboxBlocksDownload` prop on
- * the parent) — the hook itself reports `'idle'` in normal browsers and only
- * reports `'unsupported'` when the browser lacks the `download` attribute on
- * the synthetic anchor (a far stricter capability gap than the iframe block).
- * When Sitecore later adds `allow-downloads`, the parent flips
- * `sandboxBlocksDownload` to `false` and Save lights up with no code change.
- *
- * API:
- *   ```
- *   const { status, save } = useSaveExport({ blob, filename });
- *   ```
- *
- * - `status`  — `'idle' | 'saving' | 'saved' | 'unsupported'`.
- * - `save()`  — runs the canonical mechanism. Flips status to `'saving'`,
- *               synthesizes `<a download>` + clicks, then `'saved'`. Auto-
- *               reverts to `'idle'` after 1.4 s (mirrors pageshot's revert
- *               window). Concurrent rapid calls during the saving window are
- *               no-ops via an in-flight ref guard.
+ * Save hook. Reports 'unsupported' only when the BROWSER lacks the download
+ * attribute — a far stricter gap than the iframe sandbox block, which the
+ * parent handles via a prop. When Sitecore grants allow-downloads, Save lights
+ * up with no code change. See docs/build-decisions.md#three-actions.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';

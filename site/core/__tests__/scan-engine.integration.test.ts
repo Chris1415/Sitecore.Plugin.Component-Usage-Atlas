@@ -1,35 +1,10 @@
-// T107 — RED integration tests for `core/scan-engine.ts::runScan`.
-//
-// These tests stub `@sitecore-marketplace-sdk/xmc` calls at the
-// `client.query` boundary using the typed-mock pattern from
-// `client.md` § 9. T027 (GREEN) lifts these to passing.
-//
-// Test scenarios (per § 10 T027 + the run brief):
-//   1. Happy path — 3 sites × ~50 pages × ~10 components yields a
-//      complete atlas with correct totals. Verifies that pages /
-//      renderings / datasources are tabulated correctly across the
-//      whole tenant.
-//   2. Per-page failure (forbidden / timeout / network_error) is
-//      classified into `Skipped[]` with the correct typed reason.
-//      Other pages succeed; scan continues; state is `completed`
-//      not `error`.
-//   3. Cancel mid-scan — calling `cancel()` after a few pages have
-//      resolved transitions state to `canceled` with `isPartial: true`,
-//      preserving the partial atlas (renderings/datasources collected
-//      so far).
-//   4. Rate-limit retry exhausted — a page that returns 429 on EVERY
-//      attempt (more than `maxRetries`) lands in `skipped[]` with
-//      reason `network_error` (per ADR-0012).
-//   5. Missing `sitecoreContextId` — the engine surfaces the
-//      `AtlasNoContextError` (the resolver runs OUTSIDE the engine,
-//      but the engine accepts a `contextId: string` parameter — when
-//      passed an empty string, the engine should bail with the typed
-//      error before issuing any SDK call).
-//
-// Mock SDK pattern: build a single `client.query` mock that dispatches
-// based on the query key. Each scenario provides a tailored set of
-// canned responses keyed by `(siteName, pageId, language)`. NO real
-// network. NO real SDK init.
+/**
+ * Engine integration, stubbed at the client.query boundary — no real network,
+ * no real SDK init. Covers the happy path, per-page failure classification,
+ * cancel-mid-scan preserving a partial atlas, retry exhaustion, and a missing
+ * contextId bailing before any SDK call.
+ * See docs/build-decisions.md#failure-classification.
+ */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

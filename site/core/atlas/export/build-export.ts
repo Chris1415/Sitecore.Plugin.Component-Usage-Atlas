@@ -1,28 +1,11 @@
-// T017 — `buildExport` is the pure construction entry point for the
-// Atlas export feature.
-//
-// ADR-0016 (purity contract):
-//   - Reads inputs ONLY from arguments. No `getAtlasSnapshot()`, no
-//     `application.context`, no React context, no `window` reads
-//     beyond what `Blob` requires structurally.
-//   - The caller (the click handler at the surface) clones the
-//     SurfaceContext at click time via `cloneSurfaceContext` and
-//     passes both that clone and the live atlas snapshot in. From
-//     this point on the construction is deterministic over its
-//     arguments — same args → byte-identical Blob body (DoD-3 /
-//     AC-4.4).
-//   - Only side effect is constructing the returned `Blob`. No
-//     `URL.createObjectURL` here — that is the trigger's job
-//     (T025 trigger-download).
-//
-// Dispatch:
-//   - `format: 'json'` → `jsonAdapter` (JSON envelope; T019 lands the
-//     full schema § 10.1 body — currently a minimal placeholder).
-//   - `format: 'csv'`  → `csvAdapter` (T021 — placeholder).
-//   - `format: 'html'` → `htmlAdapter` (T023 — placeholder).
-//
-// Filename comes from `buildFilename` (T013) over the surfaceContext
-// + scope + format, NOT from the atlas; the atlas is body-only.
+/**
+ * Pure construction entry point: reads inputs ONLY from arguments — no store
+ * snapshot, no app context, no React context. Same args produce a
+ * byte-identical Blob body.
+ *
+ * Its only side effect is constructing the Blob; URL.createObjectURL belongs to
+ * the trigger, not here. See docs/build-decisions.md#export-purity.
+ */
 
 import type { Atlas } from '@/lib/sdk/types';
 

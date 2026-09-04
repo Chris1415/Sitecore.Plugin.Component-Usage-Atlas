@@ -1,36 +1,11 @@
-// T021 — Per-site default language resolver.
-//
-// The page list endpoint (`xmc.agent.sitesGetAllPagesBySite`) requires
-// a `language` query parameter. Per IS-13 / FR-1.3 the editor only
-// cares about the site's default language for v1; localization variants
-// are out of scope (PRD-000 § 5).
-//
-// Per OQ-A1 finding (M2 friction log T005): the SDK's `Site` shape has
-// NO `defaultLanguage` field. Only `languages?: Array<string> | null`
-// is exposed. This resolver therefore:
-//
-//   1. Calls `queryRetrieveSite` once per `siteId` (cached for the
-//      scan's duration via the module-scoped `Map`).
-//   2. Returns `languages[0]` when present.
-//   3. Falls back to the v1 hardcoded `'en'` when the site's languages
-//      list is empty / undefined. The friction-log entry recording the
-//      fallback is appended by the engine when this branch fires (the
-//      resolver itself is pure; the engine + telemetry layer is the
-//      logging surface).
-//
-// SDK shape: `node_modules/@sitecore-marketplace-sdk/xmc/dist/xmc/src/client-sites/types.gen.d.ts`
-//   `Site = { id?, name?, ..., languages?: Array<string> | null }`
-//
-// Public API:
-//
-//   resolveSiteLanguage(client, contextId, site)            → Promise<string>
-//   resolveSiteLanguageWithCache(client, contextId, site, cache) → Promise<string>
-//   createSiteLanguageCache()                               → SiteLanguageCache
-//
-// The cache is created per-scan (the engine constructs one per `runScan`
-// invocation) so that successive scans pick up edits to a site's
-// language list. It is NOT module-scoped — module-scoping would leak
-// stale results across scans.
+/**
+ * Per-site default language. Exists because the page-list endpoint REQUIRES a
+ * `language` param while the SDK's Site shape has no defaultLanguage field —
+ * only `languages?: string[] | null`. Returns languages[0], else 'en'.
+ *
+ * The cache is per-scan, never module-scoped — module scope would leak stale
+ * results across scans. See docs/build-decisions.md#site-language-resolution.
+ */
 
 import type { ClientSDK } from '@sitecore-marketplace-sdk/client';
 
